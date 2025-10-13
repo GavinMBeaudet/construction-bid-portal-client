@@ -1,7 +1,11 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-import { getProjects, getCategories, deleteProject } from "../services/apiService";
+import {
+  getProjects,
+  getCategories,
+  deleteProject,
+} from "../services/apiService";
 
 function Projects() {
   const [projects, setProjects] = useState([]);
@@ -43,9 +47,9 @@ function Projects() {
   };
 
   const handleCategoryToggle = (categoryId) => {
-    setSelectedCategories(prev => 
+    setSelectedCategories((prev) =>
       prev.includes(categoryId)
-        ? prev.filter(id => id !== categoryId)
+        ? prev.filter((id) => id !== categoryId)
         : [...prev, categoryId]
     );
   };
@@ -106,28 +110,57 @@ function Projects() {
           <div className="filters-section">
             <h3>Filter by Category:</h3>
             <div className="category-filters">
-              {categories.map((category) => (
-                <label key={category.id} className="category-checkbox">
-                  <input
-                    type="checkbox"
-                    checked={selectedCategories.includes(category.id)}
-                    onChange={() => handleCategoryToggle(category.id)}
-                  />
-                  <span>{category.name}</span>
-                </label>
-              ))}
+              <select
+                className="category-dropdown"
+                value=""
+                onChange={(e) => {
+                  const categoryId = parseInt(e.target.value);
+                  if (categoryId && !selectedCategories.includes(categoryId)) {
+                    setSelectedCategories([...selectedCategories, categoryId]);
+                  }
+                }}
+              >
+                <option value="">+ Add Category Filter</option>
+                {categories
+                  .filter((cat) => !selectedCategories.includes(cat.id))
+                  .map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.name}
+                    </option>
+                  ))}
+              </select>
+
+              <div className="selected-categories">
+                {selectedCategories.map((catId) => {
+                  const category = categories.find((c) => c.id === catId);
+                  return category ? (
+                    <span key={catId} className="category-tag">
+                      {category.name}
+                      <button
+                        className="remove-tag"
+                        onClick={() => handleCategoryToggle(catId)}
+                        aria-label={`Remove ${category.name}`}
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ) : null;
+                })}
+              </div>
+
               {selectedCategories.length > 0 && (
-                <button 
-                  onClick={handleClearFilters} 
+                <button
+                  onClick={handleClearFilters}
                   className="btn btn-secondary btn-sm"
                 >
-                  Clear Filters
+                  Clear All Filters
                 </button>
               )}
             </div>
             {selectedCategories.length > 0 && (
               <p className="filter-status">
-                Showing projects in {selectedCategories.length} selected {selectedCategories.length === 1 ? 'category' : 'categories'}
+                Showing projects in {selectedCategories.length} selected{" "}
+                {selectedCategories.length === 1 ? "category" : "categories"}
               </p>
             )}
           </div>
