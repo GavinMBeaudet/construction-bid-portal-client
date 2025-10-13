@@ -1,29 +1,57 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-import { getProjects, deleteProject } from "../services/apiService";
+import { getProjects, getCategories, deleteProject } from "../services/apiService";
 
 function Projects() {
   const [projects, setProjects] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [selectedCategories, setSelectedCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
+    loadCategories();
     loadProjects();
   }, []);
+
+  useEffect(() => {
+    loadProjects();
+  }, [selectedCategories]);
+
+  const loadCategories = async () => {
+    try {
+      const data = await getCategories();
+      setCategories(data);
+    } catch (err) {
+      console.error("Failed to load categories:", err);
+    }
+  };
 
   const loadProjects = async () => {
     try {
       setLoading(true);
-      const data = await getProjects();
+      const data = await getProjects(selectedCategories);
       setProjects(data);
     } catch (err) {
       setError("Failed to load projects");
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleCategoryToggle = (categoryId) => {
+    setSelectedCategories(prev => 
+      prev.includes(categoryId)
+        ? prev.filter(id => id !== categoryId)
+        : [...prev, categoryId]
+    );
+  };
+
+  const handleClearFilters = () => {
+    setSelectedCategories([]);
   };
 
   const handleDeleteProject = async (projectId) => {
@@ -72,6 +100,38 @@ function Projects() {
             </Link>
           )}
         </div>
+
+        {/* Category Filters */}
+        {categories.length > 0 && (
+          <div className="filters-section">
+            <h3>Filter by Category:</h3>
+            <div className="category-filters">
+              {categories.map((category) => (
+                <label key={category.id} className="category-checkbox">
+                  <input
+                    type="checkbox"
+                    checked={selectedCategories.includes(category.id)}
+                    onChange={() => handleCategoryToggle(category.id)}
+                  />
+                  <span>{category.name}</span>
+                </label>
+              ))}
+              {selectedCategories.length > 0 && (
+                <button 
+                  onClick={handleClearFilters} 
+                  className="btn btn-secondary btn-sm"
+                >
+                  Clear Filters
+                </button>
+              )}
+            </div>
+            {selectedCategories.length > 0 && (
+              <p className="filter-status">
+                Showing projects in {selectedCategories.length} selected {selectedCategories.length === 1 ? 'category' : 'categories'}
+              </p>
+            )}
+          </div>
+        )}
 
         {error && <div className="alert alert-error">{error}</div>}
 

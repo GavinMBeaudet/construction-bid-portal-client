@@ -1,8 +1,19 @@
 const API_URL = "/api";
 
+// Categories
+export const getCategories = async () => {
+  const response = await fetch(`${API_URL}/categories`);
+  if (!response.ok) throw new Error("Failed to fetch categories");
+  return response.json();
+};
+
 // Projects
-export const getProjects = async () => {
-  const response = await fetch(`${API_URL}/projects`);
+export const getProjects = async (categoryIds = []) => {
+  let url = `${API_URL}/projects`;
+  if (categoryIds.length > 0) {
+    url += `?categories=${categoryIds.join(',')}`;
+  }
+  const response = await fetch(url);
   if (!response.ok) throw new Error("Failed to fetch projects");
   return response.json();
 };
