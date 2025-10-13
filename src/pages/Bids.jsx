@@ -1,13 +1,14 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-import { getBidsByContractor } from "../services/apiService";
+import { getBidsByContractor, deleteBid } from "../services/apiService";
 
 function Bids() {
   const { user, logout } = useAuth();
   const [bids, setBids] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [editingBid, setEditingBid] = useState(null);
 
   useEffect(() => {
     loadBids();
@@ -22,6 +23,19 @@ function Bids() {
       setError("Failed to load your bids");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteBid = async (bidId) => {
+    if (!window.confirm("Are you sure you want to withdraw this bid?")) {
+      return;
+    }
+
+    try {
+      await deleteBid(bidId, user.id);
+      setBids(bids.filter((b) => b.id !== bidId));
+    } catch (err) {
+      setError("Failed to delete bid");
     }
   };
 
@@ -85,7 +99,11 @@ function Bids() {
                 <div className="bid-item-content">
                   <div className="bid-details">
                     <div className="detail-item">
-                      <strong>Your Bid:</strong> ${bid.amount.toLocaleString()}
+                      <strong>Your Bid:</strong> $
+                      {bid.bidAmount.toLocaleString()}
+                    </div>
+                    <div className="detail-item">
+                      <strong>Timeline:</strong> {bid.timelineInDays} days
                     </div>
                     <div className="detail-item">
                       <strong>Project Budget:</strong> $
@@ -110,6 +128,15 @@ function Bids() {
                   >
                     View Project
                   </Link>
+                  <Link to={`/bids/${bid.id}/edit`} className="btn btn-primary">
+                    Edit Bid
+                  </Link>
+                  <button
+                    onClick={() => handleDeleteBid(bid.id)}
+                    className="btn btn-danger"
+                  >
+                    Withdraw
+                  </button>
                 </div>
               </div>
             ))}

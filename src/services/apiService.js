@@ -23,8 +23,17 @@ export const createProject = async (projectData) => {
   return response.json();
 };
 
-export const deleteProject = async (id) => {
+export const updateProject = async (id, projectData) => {
   const response = await fetch(`${API_URL}/projects/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(projectData),
+  });
+  if (!response.ok) throw new Error("Failed to update project");
+};
+
+export const deleteProject = async (id, userId) => {
+  const response = await fetch(`${API_URL}/projects/${id}?userId=${userId}`, {
     method: "DELETE",
   });
   if (!response.ok) throw new Error("Failed to delete project");
@@ -57,6 +66,22 @@ export const createBid = async (bidData) => {
   });
   if (!response.ok) throw new Error("Failed to create bid");
   return response.json();
+};
+
+export const updateBid = async (id, bidData) => {
+  const response = await fetch(`${API_URL}/bids/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(bidData),
+  });
+  if (!response.ok) throw new Error("Failed to update bid");
+};
+
+export const deleteBid = async (id, userId) => {
+  const response = await fetch(`${API_URL}/bids/${id}?userId=${userId}`, {
+    method: "DELETE",
+  });
+  if (!response.ok) throw new Error("Failed to delete bid");
 };
 
 // Legacy aliases for backward compatibility

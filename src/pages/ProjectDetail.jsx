@@ -4,7 +4,9 @@ import { useAuth } from "../contexts/AuthContext";
 import {
   getProjectById,
   getBidsByProject,
+  getBidsByContractor,
   createBid,
+  deleteProject,
 } from "../services/apiService";
 
 function ProjectDetail() {
@@ -19,6 +21,7 @@ function ProjectDetail() {
 
   const [showBidForm, setShowBidForm] = useState(false);
   const [bidAmount, setBidAmount] = useState("");
+  const [timelineInDays, setTimelineInDays] = useState("");
   const [proposal, setProposal] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -32,10 +35,18 @@ function ProjectDetail() {
       const projectData = await getProjectById(id);
       setProject(projectData);
 
-      // Only load bids if user is the owner
+      // Load bids based on user type
       if (user?.userType === "Owner" && user?.id === projectData.ownerId) {
+        // Owner sees all bids for their project
         const bidsData = await getBidsByProject(id);
         setBids(bidsData);
+      } else if (user?.userType === "Contractor") {
+        // Contractor sees only their own bid for this project
+        const allContractorBids = await getBidsByContractor(user.id);
+        const myBidForThisProject = allContractorBids.filter(
+          (b) => b.projectId === parseInt(id)
+        );
+        setBids(myBidForThisProject);
       }
     } catch (err) {
       setError("Failed to load project details");
@@ -53,7 +64,8 @@ function ProjectDetail() {
       await createBid({
         projectId: parseInt(id),
         contractorId: user.id,
-        amount: parseFloat(bidAmount),
+        bidAmount: parseFloat(bidAmount),
+        timelineInDays: parseInt(timelineInDays),
         proposal,
       });
 
@@ -63,6 +75,24 @@ function ProjectDetail() {
       setError(err.message || "Failed to submit bid");
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleDeleteProject = async () => {
+    if (
+      !window.confirm(
+        "Are you sure you want to delete this project? This action cannot be undone."
+      )
+    ) {
+      return;
+    }
+
+    try {
+      await deleteProject(id, user.id);
+      alert("Project deleted successfully!");
+      navigate("/projects");
+    } catch (err) {
+      setError("Failed to delete project");
     }
   };
 
@@ -114,6 +144,19 @@ function ProjectDetail() {
                 {project.status}
               </span>
             </div>
+            {isOwner && (
+              <div className="project-actions">
+                <Link to={`/projects/${id}/edit`} className="btn btn-secondary">
+                  Edit Project
+                </Link>
+                <button
+                  onClick={handleDeleteProject}
+                  className="btn btn-danger"
+                >
+                  Delete Project
+                </button>
+              </div>
+            )}
           </div>
 
           <div className="project-info-grid">
@@ -139,7 +182,7 @@ function ProjectDetail() {
             </div>
           </div>
 
-          {isContractor && !showBidForm && (
+          {isContractor && bids.length === 0 && !showBidForm && (
             <div className="action-section">
               <button
                 onClick={() => setShowBidForm(true)}
@@ -150,7 +193,46 @@ function ProjectDetail() {
             </div>
           )}
 
-          {isContractor && showBidForm && (
+          {isContractor && bids.length > 0 && (
+            <div className="bids-section">
+              <h3>Your Bid</h3>
+              <div className="bids-list">
+                {bids.map((bid) => (
+                  <div key={bid.id} className="bid-card my-bid">
+                    <div className="bid-header">
+                      <h4>Your Submitted Bid</h4>
+                      <span className="bid-amount">
+                        ${bid.bidAmount.toLocaleString()}
+                      </span>
+                    </div>
+                    <p className="bid-proposal">{bid.proposal}</p>
+                    <div className="bid-meta">
+                      <span>Timeline: {bid.timelineInDays} days</span>
+                      <span>
+                        Submitted:{" "}
+                        {new Date(bid.dateSubmitted).toLocaleDateString()}
+                      </span>
+                      <span
+                        className={`status-badge status-${bid.status.toLowerCase()}`}
+                      >
+                        {bid.status}
+                      </span>
+                    </div>
+                    <div className="bid-actions">
+                      <Link
+                        to={`/bids/${bid.id}/edit`}
+                        className="btn btn-secondary"
+                      >
+                        Edit Bid
+                      </Link>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {isContractor && bids.length === 0 && showBidForm && (
             <div className="bid-form-section">
               <h3>Submit Your Bid</h3>
               <form onSubmit={handleSubmitBid}>
@@ -165,6 +247,19 @@ function ProjectDetail() {
                     min="0"
                     step="0.01"
                     placeholder="Enter your bid amount"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="timelineInDays">Timeline (Days)</label>
+                  <input
+                    type="number"
+                    id="timelineInDays"
+                    value={timelineInDays}
+                    onChange={(e) => setTimelineInDays(e.target.value)}
+                    required
+                    min="1"
+                    placeholder="Enter estimated days to complete"
                   />
                 </div>
 
@@ -215,11 +310,12 @@ function ProjectDetail() {
                           {bid.contractor?.lastName}
                         </h4>
                         <span className="bid-amount">
-                          ${bid.amount.toLocaleString()}
+                          ${bid.bidAmount.toLocaleString()}
                         </span>
                       </div>
                       <p className="bid-proposal">{bid.proposal}</p>
                       <div className="bid-meta">
+                        <span>Timeline: {bid.timelineInDays} days</span>
                         <span>
                           Submitted:{" "}
                           {new Date(bid.dateSubmitted).toLocaleDateString()}
