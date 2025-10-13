@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-import { getProjectById, updateProject } from "../services/apiService";
+import { getProjectById, updateProject, getCategories } from "../services/apiService";
 
 function EditProject() {
   const { id } = useParams();
@@ -11,6 +11,8 @@ function EditProject() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [categories, setCategories] = useState([]);
+  const [selectedCategories, setSelectedCategories] = useState([]);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -22,8 +24,18 @@ function EditProject() {
   });
 
   useEffect(() => {
+    loadCategories();
     loadProject();
   }, [id]);
+
+  const loadCategories = async () => {
+    try {
+      const data = await getCategories();
+      setCategories(data);
+    } catch (err) {
+      console.error("Failed to load categories:", err);
+    }
+  };
 
   const loadProject = async () => {
     try {
@@ -44,6 +56,11 @@ function EditProject() {
         bidDeadline: project.bidDeadline.split("T")[0], // Format for date input
         status: project.status,
       });
+
+      // Set selected categories
+      if (project.projectCategories) {
+        setSelectedCategories(project.projectCategories.map(pc => pc.categoryId));
+      }
     } catch (err) {
       setError("Failed to load project");
     } finally {
@@ -59,6 +76,14 @@ function EditProject() {
     }));
   };
 
+  const handleCategoryToggle = (categoryId) => {
+    setSelectedCategories((prev) =>
+      prev.includes(categoryId)
+        ? prev.filter((id) => id !== categoryId)
+        : [...prev, categoryId]
+    );
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
@@ -70,6 +95,7 @@ function EditProject() {
         ...formData,
         budget: parseFloat(formData.budget),
         ownerId: user.id,
+        categoryIds: selectedCategories,
       });
 
       alert("Project updated successfully!");
@@ -198,6 +224,26 @@ function EditProject() {
                   <option value="Completed">Completed</option>
                   <option value="Cancelled">Cancelled</option>
                 </select>
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label>Project Categories</label>
+              <p className="field-hint">
+                Select one or more categories that best describe this project
+              </p>
+              <div className="category-selection">
+                {categories.map((category) => (
+                  <label key={category.id} className="category-checkbox">
+                    <input
+                      type="checkbox"
+                      checked={selectedCategories.includes(category.id)}
+                      onChange={() => handleCategoryToggle(category.id)}
+                    />
+                    <span>{category.name}</span>
+                    <small className="category-desc">{category.description}</small>
+                  </label>
+                ))}
               </div>
             </div>
 

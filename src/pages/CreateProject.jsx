@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-import { createProject } from "../services/apiService";
+import { createProject, getCategories } from "../services/apiService";
 
 function CreateProject() {
   const { user, logout } = useAuth();
@@ -14,14 +14,37 @@ function CreateProject() {
     budget: "",
     bidDeadline: "",
   });
+  const [categories, setCategories] = useState([]);
+  const [selectedCategories, setSelectedCategories] = useState([]);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    loadCategories();
+  }, []);
+
+  const loadCategories = async () => {
+    try {
+      const data = await getCategories();
+      setCategories(data);
+    } catch (err) {
+      console.error("Failed to load categories:", err);
+    }
+  };
 
   const handleChange = (e) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
     });
+  };
+
+  const handleCategoryToggle = (categoryId) => {
+    setSelectedCategories((prev) =>
+      prev.includes(categoryId)
+        ? prev.filter((id) => id !== categoryId)
+        : [...prev, categoryId]
+    );
   };
 
   const handleSubmit = async (e) => {
@@ -38,6 +61,7 @@ function CreateProject() {
         budget: parseFloat(formData.budget),
         bidDeadline: formData.bidDeadline + "T00:00:00",
         status: "Open",
+        categoryIds: selectedCategories,
       };
 
       await createProject(projectData);
@@ -149,6 +173,26 @@ function CreateProject() {
                 required
                 min={new Date().toISOString().split("T")[0]}
               />
+            </div>
+
+            <div className="form-group">
+              <label>Project Categories</label>
+              <p className="field-hint">
+                Select one or more categories that best describe this project
+              </p>
+              <div className="category-selection">
+                {categories.map((category) => (
+                  <label key={category.id} className="category-checkbox">
+                    <input
+                      type="checkbox"
+                      checked={selectedCategories.includes(category.id)}
+                      onChange={() => handleCategoryToggle(category.id)}
+                    />
+                    <span>{category.name}</span>
+                    <small className="category-desc">{category.description}</small>
+                  </label>
+                ))}
+              </div>
             </div>
 
             <div className="form-actions">
