@@ -12,7 +12,9 @@ import Dashboard from "./pages/Dashboard";
 import Projects from "./pages/Projects";
 import ProjectDetail from "./pages/ProjectDetail";
 import CreateProject from "./pages/CreateProject";
+import EditProject from "./pages/EditProject";
 import Bids from "./pages/Bids";
+import EditBid from "./pages/EditBid";
 import PrivateRoute from "./components/PrivateRoute";
 
 function App() {
@@ -58,10 +60,26 @@ function App() {
             }
           />
           <Route
+            path="/projects/:id/edit"
+            element={
+              <PrivateRoute>
+                <EditProject />
+              </PrivateRoute>
+            }
+          />
+          <Route
             path="/bids"
             element={
               <PrivateRoute>
                 <Bids />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/bids/:id/edit"
+            element={
+              <PrivateRoute>
+                <EditBid />
               </PrivateRoute>
             }
           />

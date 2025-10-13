@@ -555,9 +555,17 @@ body {
 }
 
 .project-detail .project-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
   margin-bottom: 2rem;
   padding-bottom: 1rem;
   border-bottom: 2px solid #e1e8ed;
+}
+
+.project-detail .project-header .project-actions {
+  display: flex;
+  gap: 0.5rem;
 }
 
 .project-detail h1 {
@@ -643,6 +651,19 @@ body {
   padding: 1.5rem;
   border-radius: 8px;
   border-left: 4px solid #3498db;
+}
+
+.bid-card.my-bid {
+  background: #e8f5e9;
+  border-left: 4px solid #27ae60;
+}
+
+.bid-actions {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e1e8ed;
+  display: flex;
+  gap: 0.5rem;
 }
 
 .bid-header {

@@ -1,13 +1,14 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-import { getProjects } from "../services/apiService";
+import { getProjects, deleteProject } from "../services/apiService";
 
 function Projects() {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     loadProjects();
@@ -22,6 +23,23 @@ function Projects() {
       setError("Failed to load projects");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteProject = async (projectId) => {
+    if (
+      !window.confirm(
+        "Are you sure you want to delete this project? This action cannot be undone."
+      )
+    ) {
+      return;
+    }
+
+    try {
+      await deleteProject(projectId);
+      setProjects(projects.filter((p) => p.id !== projectId));
+    } catch (err) {
+      setError("Failed to delete project");
     }
   };
 
@@ -108,6 +126,23 @@ function Projects() {
                       Submit Bid
                     </Link>
                   )}
+                  {user?.userType === "Owner" &&
+                    user?.id === project.ownerId && (
+                      <>
+                        <Link
+                          to={`/projects/${project.id}/edit`}
+                          className="btn btn-secondary"
+                        >
+                          Edit
+                        </Link>
+                        <button
+                          onClick={() => handleDeleteProject(project.id)}
+                          className="btn btn-danger"
+                        >
+                          Delete
+                        </button>
+                      </>
+                    )}
                 </div>
               </div>
             ))}
