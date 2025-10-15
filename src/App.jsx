@@ -11,6 +11,7 @@ import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import Projects from "./pages/Projects";
 import ProjectDetail from "./pages/ProjectDetail";
+import ProjectBids from "./pages/ProjectBids";
 import CreateProject from "./pages/CreateProject";
 import EditProject from "./pages/EditProject";
 import Bids from "./pages/Bids";
@@ -48,6 +49,14 @@ function App() {
             element={
               <PrivateRoute>
                 <ProjectDetail />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/projects/:id/bids"
+            element={
+              <PrivateRoute>
+                <ProjectBids />
               </PrivateRoute>
             }
           />
