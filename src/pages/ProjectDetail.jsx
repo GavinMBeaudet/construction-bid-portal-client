@@ -297,7 +297,17 @@ function ProjectDetail() {
 
           {isOwner && (
             <div className="bids-section">
-              <h3>Received Bids ({bids.length})</h3>
+              <div className="section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                <h3>Received Bids ({bids.length})</h3>
+                {bids.length > 1 && (
+                  <Link
+                    to={`/projects/${id}/bids`}
+                    className="btn btn-primary"
+                  >
+                    Compare All Bids
+                  </Link>
+                )}
+              </div>
               {bids.length === 0 ? (
                 <p className="empty-state">No bids received yet.</p>
               ) : (
