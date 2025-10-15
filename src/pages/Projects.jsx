@@ -17,9 +17,11 @@ function Projects() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    loadCategories();
+    if (user?.userType === "Contractor") {
+      loadCategories();
+    }
     loadProjects();
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     loadProjects();
@@ -105,8 +107,8 @@ function Projects() {
           )}
         </div>
 
-        {/* Category Filters */}
-        {categories.length > 0 && (
+        {/* Category Filters - Only for Contractors */}
+        {user?.userType === "Contractor" && categories.length > 0 && (
           <div className="filters-section">
             <h3>Filter by Category:</h3>
             <div className="category-filters">
