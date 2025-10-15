@@ -1,3 +1,53 @@
+/* Award Modal Styles */
+.award-modal {
+  max-width: 420px;
+  background: #fffbe6;
+  border: 2px solid #ffe066;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(255, 224, 102, 0.25), 0 2px 8px rgba(44, 62, 80, 0.08);
+}
+
+.award-confirmation {
+  padding: 1.5rem 1.5rem 0.5rem 1.5rem;
+}
+
+.award-details {
+  margin-bottom: 1.2rem;
+  font-size: 1.08rem;
+}
+
+.award-details p {
+  margin: 0.2rem 0 0.2rem 0;
+}
+
+.award-warning {
+  background: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffe066;
+  border-radius: 6px;
+  padding: 0.9rem 1rem;
+  margin-bottom: 1.2rem;
+  font-size: 0.98rem;
+}
+
+.award-warning ul {
+  margin: 0.5rem 0 0 1.2rem;
+  padding: 0;
+}
+
+.award-warning li {
+  margin-bottom: 0.2rem;
+}
+
+.error-message {
+  background: #fee;
+  color: #c00;
+  padding: 0.7rem 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  font-size: 1rem;
+  border: 1px solid #f5c6cb;
+}
 * {
   margin: 0;
   padding: 0;

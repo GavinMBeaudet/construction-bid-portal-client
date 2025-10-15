@@ -104,6 +104,18 @@ export const deleteBid = async (id, userId) => {
   if (!response.ok) throw new Error("Failed to delete bid");
 };
 
+export const awardBid = async (bidId, userId) => {
+  const response = await fetch(`${API_URL}/bids/${bidId}/award?userId=${userId}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+  });
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.detail || "Failed to award bid");
+  }
+  return response.json();
+};
+
 // Legacy aliases for backward compatibility
 export const fetchProjects = getProjects;
 export const fetchProject = getProjectById;

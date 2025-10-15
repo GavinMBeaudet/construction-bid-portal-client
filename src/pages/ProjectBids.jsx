@@ -1,7 +1,11 @@
 import { useState, useEffect } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-import { getProjectById, getBidsByProject } from "../services/apiService";
+import {
+  getProjectById,
+  getBidsByProject,
+  awardBid,
+} from "../services/apiService";
 
 function ProjectBids() {
   const { id } = useParams();
@@ -15,6 +19,8 @@ function ProjectBids() {
   const [sortBy, setSortBy] = useState("bidAmount");
   const [sortOrder, setSortOrder] = useState("asc");
   const [selectedProposal, setSelectedProposal] = useState(null);
+  const [awardingBid, setAwardingBid] = useState(null);
+  const [awarding, setAwarding] = useState(false);
 
   useEffect(() => {
     loadProjectAndBids();
@@ -49,6 +55,34 @@ function ProjectBids() {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Award modal handlers
+  const handleAwardBid = (bid) => {
+    setAwardingBid(bid);
+    setError("");
+  };
+
+  const confirmAward = async () => {
+    if (!awardingBid) return;
+    setAwarding(true);
+    setError("");
+    try {
+      await awardBid(awardingBid.id, user.id);
+      // Refresh project and bids after awarding
+      await loadProjectAndBids();
+      setAwardingBid(null);
+      // Optionally show a toast or success message here
+    } catch (err) {
+      setError(err.message || "Failed to award bid");
+    } finally {
+      setAwarding(false);
+    }
+  };
+
+  const cancelAward = () => {
+    setAwardingBid(null);
+    setError("");
   };
 
   const handleSort = (field) => {
@@ -241,8 +275,7 @@ function ProjectBids() {
                     {sortBy === "dateSubmitted" &&
                       (sortOrder === "asc" ? "▲" : "▼")}
                   </th>
-                  <th>Status</th>
-                  <th>Proposal</th>
+                  <th>Details</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -299,14 +332,10 @@ function ProjectBids() {
                           className="btn-link"
                           onClick={() => showProposalModal(bid)}
                         >
-                          View Proposal
+                          View Details
                         </button>
                       </td>
-                      <td>
-                        <button className="btn btn-success btn-sm">
-                          Award Bid
-                        </button>
-                      </td>
+                      <td></td>
                     </tr>
                   );
                 })}
@@ -341,6 +370,23 @@ function ProjectBids() {
                       {selectedProposal.timelineInDays} days
                     </span>
                   </div>
+                  <div
+                    className="award-warning"
+                    style={{ marginBottom: "1.2rem" }}
+                  >
+                    <strong>Warning:</strong> Awarding this bid will:
+                    <ul>
+                      <li>
+                        Set this bid as <b>Accepted</b> and notify the
+                        contractor
+                      </li>
+                      <li>
+                        Mark the project as <b>Awarded</b>
+                      </li>
+                      <li>Reject all other bids for this project</li>
+                      <li>This action cannot be undone</li>
+                    </ul>
+                  </div>
                   <div className="proposal-text">
                     <h4>Proposal:</h4>
                     <p>{selectedProposal.proposal}</p>
@@ -354,7 +400,12 @@ function ProjectBids() {
                 >
                   Close
                 </button>
-                <button className="btn btn-success">Award This Bid</button>
+                <button
+                  className="btn btn-success"
+                  onClick={() => handleAwardBid(selectedProposal)}
+                >
+                  Award This Bid
+                </button>
               </div>
             </div>
           </div>
