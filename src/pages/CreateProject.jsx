@@ -26,6 +26,8 @@ function CreateProject() {
   const loadCategories = async () => {
     try {
       const data = await getCategories();
+      console.log("Categories loaded:", data);
+      console.log("Number of categories:", data.length);
       setCategories(data);
     } catch (err) {
       console.error("Failed to load categories:", err);
@@ -180,19 +182,27 @@ function CreateProject() {
               <p className="field-hint">
                 Select one or more categories that best describe this project
               </p>
-              <div className="category-selection">
-                {categories.map((category) => (
-                  <label key={category.id} className="category-checkbox">
-                    <input
-                      type="checkbox"
-                      checked={selectedCategories.includes(category.id)}
-                      onChange={() => handleCategoryToggle(category.id)}
-                    />
-                    <span>{category.name}</span>
-                    <small className="category-desc">{category.description}</small>
-                  </label>
-                ))}
-              </div>
+              {categories.length === 0 ? (
+                <p style={{ padding: "1rem", color: "#999" }}>
+                  Loading categories...
+                </p>
+              ) : (
+                <div className="category-selection">
+                  {categories.map((category) => (
+                    <label key={category.id} className="category-checkbox">
+                      <input
+                        type="checkbox"
+                        checked={selectedCategories.includes(category.id)}
+                        onChange={() => handleCategoryToggle(category.id)}
+                      />
+                      <span>{category.name}</span>
+                      <small className="category-desc">
+                        {category.description}
+                      </small>
+                    </label>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="form-actions">

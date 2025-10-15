@@ -1,7 +1,11 @@
 import { useState, useEffect } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-import { getProjectById, updateProject, getCategories } from "../services/apiService";
+import {
+  getProjectById,
+  updateProject,
+  getCategories,
+} from "../services/apiService";
 
 function EditProject() {
   const { id } = useParams();
@@ -59,7 +63,9 @@ function EditProject() {
 
       // Set selected categories
       if (project.projectCategories) {
-        setSelectedCategories(project.projectCategories.map(pc => pc.categoryId));
+        setSelectedCategories(
+          project.projectCategories.map((pc) => pc.categoryId)
+        );
       }
     } catch (err) {
       setError("Failed to load project");
@@ -241,7 +247,9 @@ function EditProject() {
                       onChange={() => handleCategoryToggle(category.id)}
                     />
                     <span>{category.name}</span>
-                    <small className="category-desc">{category.description}</small>
+                    <small className="category-desc">
+                      {category.description}
+                    </small>
                   </label>
                 ))}
               </div>
