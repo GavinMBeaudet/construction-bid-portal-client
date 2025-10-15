@@ -11,7 +11,7 @@ export const getCategories = async () => {
 export const getProjects = async (categoryIds = []) => {
   let url = `${API_URL}/projects`;
   if (categoryIds.length > 0) {
-    url += `?categories=${categoryIds.join(',')}`;
+    url += `?categories=${categoryIds.join(",")}`;
   }
   const response = await fetch(url);
   if (!response.ok) throw new Error("Failed to fetch projects");
@@ -21,6 +21,15 @@ export const getProjects = async (categoryIds = []) => {
 export const getProjectById = async (id) => {
   const response = await fetch(`${API_URL}/projects/${id}`);
   if (!response.ok) throw new Error("Failed to fetch project");
+  return response.json();
+};
+
+export const getOwnerProjectsWithStats = async (userId) => {
+  const response = await fetch(
+    `${API_URL}/projects/owner/${userId}/with-stats`
+  );
+  if (!response.ok)
+    throw new Error("Failed to fetch owner projects with stats");
   return response.json();
 };
 
