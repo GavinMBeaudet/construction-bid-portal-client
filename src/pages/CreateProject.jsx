@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { createProject, getCategories } from "../services/apiService";
+import { PROJECT_STATUS } from "../constants/status";
 
 function CreateProject() {
   const { user, logout } = useAuth();
@@ -62,7 +63,7 @@ function CreateProject() {
         location: formData.location,
         budget: parseFloat(formData.budget),
         bidDeadline: formData.bidDeadline + "T00:00:00",
-        status: "Open",
+        status: PROJECT_STATUS.OPEN,
         categoryIds: selectedCategories,
       };
 

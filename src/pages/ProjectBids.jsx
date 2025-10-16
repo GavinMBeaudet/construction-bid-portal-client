@@ -21,6 +21,8 @@ function ProjectBids() {
   const [selectedProposal, setSelectedProposal] = useState(null);
   const [awardingBid, setAwardingBid] = useState(null);
   const [awarding, setAwarding] = useState(false);
+  // Step 1: Add state for confirmation modal
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
 
   useEffect(() => {
     loadProjectAndBids();
@@ -68,7 +70,8 @@ function ProjectBids() {
     setAwarding(true);
     setError("");
     try {
-      await awardBid(awardingBid.id, user.id);
+      const response = await awardBid(awardingBid.id, user.id);
+      console.log("Award Bid API response:", response);
       // Refresh project and bids after awarding
       await loadProjectAndBids();
       setAwardingBid(null);
@@ -332,7 +335,7 @@ function ProjectBids() {
                           className="btn-link"
                           onClick={() => showProposalModal(bid)}
                         >
-                          View Details
+                          Award
                         </button>
                       </td>
                       <td></td>
@@ -370,23 +373,6 @@ function ProjectBids() {
                       {selectedProposal.timelineInDays} days
                     </span>
                   </div>
-                  <div
-                    className="award-warning"
-                    style={{ marginBottom: "1.2rem" }}
-                  >
-                    <strong>Warning:</strong> Awarding this bid will:
-                    <ul>
-                      <li>
-                        Set this bid as <b>Accepted</b> and notify the
-                        contractor
-                      </li>
-                      <li>
-                        Mark the project as <b>Awarded</b>
-                      </li>
-                      <li>Reject all other bids for this project</li>
-                      <li>This action cannot be undone</li>
-                    </ul>
-                  </div>
                   <div className="proposal-text">
                     <h4>Proposal:</h4>
                     <p>{selectedProposal.proposal}</p>
@@ -402,9 +388,71 @@ function ProjectBids() {
                 </button>
                 <button
                   className="btn btn-success"
-                  onClick={() => handleAwardBid(selectedProposal)}
+                  onClick={() => {
+                    setAwardingBid(selectedProposal);
+                    setShowConfirmModal(true);
+                  }}
                 >
                   Award This Bid
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Confirmation Modal for Awarding Bid */}
+        {showConfirmModal && awardingBid && (
+          <div
+            className="modal-overlay"
+            onClick={() => setShowConfirmModal(false)}
+          >
+            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header">
+                <h2>Confirm Award</h2>
+                <button
+                  className="modal-close"
+                  onClick={() => setShowConfirmModal(false)}
+                >
+                  ×
+                </button>
+              </div>
+              <div className="modal-body">
+                <div
+                  className="award-warning"
+                  style={{ marginBottom: "1.2rem" }}
+                >
+                  <strong>Warning:</strong> Awarding this bid will:
+                  <ul>
+                    <li>
+                      Set this bid as <b>Accepted</b> and notify the contractor
+                    </li>
+                    <li>
+                      Mark the project as <b>Awarded</b>
+                    </li>
+                    <li>Reject all other bids for this project</li>
+                    <li>This action cannot be undone</li>
+                  </ul>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => {
+                    setShowConfirmModal(false);
+                    setAwardingBid(null);
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="btn btn-success"
+                  onClick={async () => {
+                    await confirmAward();
+                    setShowConfirmModal(false);
+                  }}
+                  disabled={awarding}
+                >
+                  {awarding ? "Awarding..." : "Confirm"}
                 </button>
               </div>
             </div>

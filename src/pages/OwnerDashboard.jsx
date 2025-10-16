@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { PROJECT_STATUS } from "../constants/status";
 import { getOwnerProjectsWithStats } from "../services/apiService";
 
 function OwnerDashboard() {
@@ -32,7 +33,9 @@ function OwnerDashboard() {
   };
 
   const totalBids = projects.reduce((sum, p) => sum + p.bidCount, 0);
-  const activeProjects = projects.filter((p) => p.status === "Open").length;
+  const activeProjects = projects.filter(
+    (p) => p.status === PROJECT_STATUS.OPEN
+  ).length;
 
   return (
     <div className="dashboard">

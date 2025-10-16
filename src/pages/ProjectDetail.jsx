@@ -8,6 +8,7 @@ import {
   createBid,
   deleteProject,
 } from "../services/apiService";
+import ConfirmModal from "../components/ConfirmModal";
 
 function ProjectDetail() {
   const { id } = useParams();
@@ -24,6 +25,7 @@ function ProjectDetail() {
   const [timelineInDays, setTimelineInDays] = useState("");
   const [proposal, setProposal] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   useEffect(() => {
     loadProjectData();
@@ -78,21 +80,18 @@ function ProjectDetail() {
     }
   };
 
-  const handleDeleteProject = async () => {
-    if (
-      !window.confirm(
-        "Are you sure you want to delete this project? This action cannot be undone."
-      )
-    ) {
-      return;
-    }
+  const handleDeleteProject = () => {
+    setShowDeleteModal(true);
+  };
 
+  const confirmDeleteProject = async () => {
     try {
       await deleteProject(id, user.id);
-      alert("Project deleted successfully!");
+      setShowDeleteModal(false);
       navigate("/projects");
     } catch (err) {
       setError("Failed to delete project");
+      setShowDeleteModal(false);
     }
   };
 
@@ -297,13 +296,18 @@ function ProjectDetail() {
 
           {isOwner && (
             <div className="bids-section">
-              <div className="section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <div
+                className="section-header"
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: "1.5rem",
+                }}
+              >
                 <h3>Received Bids ({bids.length})</h3>
                 {bids.length > 1 && (
-                  <Link
-                    to={`/projects/${id}/bids`}
-                    className="btn btn-primary"
-                  >
+                  <Link to={`/projects/${id}/bids`} className="btn btn-primary">
                     Compare All Bids
                   </Link>
                 )}
@@ -344,6 +348,14 @@ function ProjectDetail() {
           )}
         </div>
       </main>
+      <ConfirmModal
+        open={showDeleteModal}
+        message="Are you sure you want to delete this project? This action cannot be undone."
+        onConfirm={confirmDeleteProject}
+        onCancel={() => setShowDeleteModal(false)}
+        confirmText="Delete"
+        cancelText="Cancel"
+      />
     </div>
   );
 }

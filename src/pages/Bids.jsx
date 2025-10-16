@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { getBidsByContractor, deleteBid } from "../services/apiService";
+import ConfirmModal from "../components/ConfirmModal";
 
 function Bids() {
   const { user, logout } = useAuth();
@@ -9,6 +10,8 @@ function Bids() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [editingBid, setEditingBid] = useState(null);
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+  const [bidToWithdraw, setBidToWithdraw] = useState(null);
 
   useEffect(() => {
     loadBids();
@@ -26,16 +29,22 @@ function Bids() {
     }
   };
 
-  const handleDeleteBid = async (bidId) => {
-    if (!window.confirm("Are you sure you want to withdraw this bid?")) {
-      return;
-    }
+  const handleDeleteBid = (bidId) => {
+    setBidToWithdraw(bidId);
+    setShowWithdrawModal(true);
+  };
 
+  const confirmWithdraw = async () => {
+    if (!bidToWithdraw) return;
     try {
-      await deleteBid(bidId, user.id);
-      setBids(bids.filter((b) => b.id !== bidId));
+      await deleteBid(bidToWithdraw, user.id);
+      setBids((prev) => prev.filter((b) => b.id !== bidToWithdraw));
+      setShowWithdrawModal(false);
+      setBidToWithdraw(null);
     } catch (err) {
       setError("Failed to delete bid");
+      setShowWithdrawModal(false);
+      setBidToWithdraw(null);
     }
   };
 
@@ -55,94 +64,104 @@ function Bids() {
             <button onClick={handleLogout} className="btn btn-secondary">
               Logout
             </button>
-          </div>
-        </div>
+          </div>{" "}
+          {/* close nav-links */}
+        </div>{" "}
+        {/* close container */}
       </nav>
+      <div className="page-header">
+        <h1>My Bids</h1>
+        <Link to="/projects" className="btn btn-primary">
+          Browse Projects
+        </Link>
+      </div>
 
-      <main className="container">
-        <div className="page-header">
-          <h1>My Bids</h1>
+      {error && <div className="alert alert-error">{error}</div>}
+
+      {loading ? (
+        <div className="loading">Loading your bids...</div>
+      ) : bids.length === 0 ? (
+        <div className="empty-state">
+          <p>You haven't submitted any bids yet.</p>
           <Link to="/projects" className="btn btn-primary">
-            Browse Projects
+            Browse Projects to Bid On
           </Link>
         </div>
-
-        {error && <div className="alert alert-error">{error}</div>}
-
-        {loading ? (
-          <div className="loading">Loading your bids...</div>
-        ) : bids.length === 0 ? (
-          <div className="empty-state">
-            <p>You haven't submitted any bids yet.</p>
-            <Link to="/projects" className="btn btn-primary">
-              Browse Projects to Bid On
-            </Link>
-          </div>
-        ) : (
-          <div className="bids-list">
-            {bids.map((bid) => (
-              <div key={bid.id} className="bid-item">
-                <div className="bid-item-header">
-                  <div>
-                    <h3>{bid.project?.title}</h3>
-                    <p className="bid-project-location">
-                      {bid.project?.location}
-                    </p>
-                  </div>
-                  <span
-                    className={`status-badge status-${bid.status.toLowerCase()}`}
-                  >
-                    {bid.status}
-                  </span>
+      ) : (
+        <div className="bids-list">
+          {bids.map((bid) => (
+            <div key={bid.id} className="bid-item">
+              <div className="bid-item-header">
+                <div>
+                  <h3>{bid.project?.title}</h3>
+                  <p className="bid-project-location">
+                    {bid.project?.location}
+                  </p>
                 </div>
+                <span
+                  className={`status-badge status-${bid.status.toLowerCase()}`}
+                >
+                  {bid.status}
+                </span>
+              </div>
 
-                <div className="bid-item-content">
-                  <div className="bid-details">
-                    <div className="detail-item">
-                      <strong>Your Bid:</strong> $
-                      {bid.bidAmount.toLocaleString()}
-                    </div>
-                    <div className="detail-item">
-                      <strong>Timeline:</strong> {bid.timelineInDays} days
-                    </div>
-                    <div className="detail-item">
-                      <strong>Project Budget:</strong> $
-                      {bid.project?.budget.toLocaleString()}
-                    </div>
-                    <div className="detail-item">
-                      <strong>Submitted:</strong>{" "}
-                      {new Date(bid.dateSubmitted).toLocaleDateString()}
-                    </div>
+              <div className="bid-item-content">
+                <div className="bid-details">
+                  <div className="detail-item">
+                    <strong>Your Bid:</strong> ${bid.bidAmount.toLocaleString()}
                   </div>
-
-                  <div className="bid-proposal">
-                    <h4>Your Proposal:</h4>
-                    <p>{bid.proposal}</p>
+                  <div className="detail-item">
+                    <strong>Timeline:</strong> {bid.timelineInDays} days
+                  </div>
+                  <div className="detail-item">
+                    <strong>Project Budget:</strong> $
+                    {bid.project?.budget.toLocaleString()}
+                  </div>
+                  <div className="detail-item">
+                    <strong>Submitted:</strong>{" "}
+                    {new Date(bid.dateSubmitted).toLocaleDateString()}
                   </div>
                 </div>
 
-                <div className="bid-item-actions">
-                  <Link
-                    to={`/projects/${bid.projectId}`}
-                    className="btn btn-secondary"
-                  >
-                    View Project
-                  </Link>
-                  <Link to={`/bids/${bid.id}/edit`} className="btn btn-primary">
-                    Edit Bid
-                  </Link>
-                  <button
-                    onClick={() => handleDeleteBid(bid.id)}
-                    className="btn btn-danger"
-                  >
-                    Withdraw
-                  </button>
+                <div className="bid-proposal">
+                  <h4>Your Proposal:</h4>
+                  <p>{bid.proposal}</p>
                 </div>
               </div>
-            ))}
-          </div>
-        )}
-      </main>
+
+              <div className="bid-item-actions">
+                <Link
+                  to={`/projects/${bid.projectId}`}
+                  className="btn btn-secondary"
+                >
+                  View Project
+                </Link>
+                <Link to={`/bids/${bid.id}/edit`} className="btn btn-primary">
+                  Edit Bid
+                </Link>
+                <button
+                  onClick={() => handleDeleteBid(bid.id)}
+                  className="btn btn-danger"
+                >
+                  Withdraw
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+      {/* ConfirmModal is rendered below main content */}
+      <ConfirmModal
+        open={showWithdrawModal}
+        message="Are you sure you want to withdraw this bid?"
+        onConfirm={confirmWithdraw}
+        onCancel={() => {
+          setShowWithdrawModal(false);
+          setBidToWithdraw(null);
+        }}
+        confirmText="Withdraw"
+        cancelText="Cancel"
+      />
     </div>
   );
 }

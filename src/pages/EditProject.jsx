@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { PROJECT_STATUS } from "../constants/status";
 import {
   getProjectById,
   updateProject,
@@ -24,7 +25,7 @@ function EditProject() {
     location: "",
     budget: "",
     bidDeadline: "",
-    status: "Open",
+    status: PROJECT_STATUS.OPEN,
   });
 
   useEffect(() => {
@@ -225,7 +226,7 @@ function EditProject() {
                   onChange={handleChange}
                   required
                 >
-                  <option value="Open">Open</option>
+                  <option value={PROJECT_STATUS.OPEN}>Open</option>
                   <option value="In Progress">In Progress</option>
                   <option value="Completed">Completed</option>
                   <option value="Cancelled">Cancelled</option>

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { getBids, updateBid } from "../services/apiService";
+import { BID_STATUS } from "../constants/status";
 
 function EditBid() {
   const { id } = useParams();
@@ -17,7 +18,7 @@ function EditBid() {
     bidAmount: "",
     timelineInDays: "",
     proposal: "",
-    status: "Submitted",
+    status: BID_STATUS.SUBMITTED,
   });
 
   useEffect(() => {
@@ -136,78 +137,76 @@ function EditBid() {
 
           {error && <div className="alert alert-error">{error}</div>}
 
-          <form onSubmit={handleSubmit}>
-            <div className="form-group">
-              <label htmlFor="bidAmount">Bid Amount ($)</label>
-              <input
-                type="number"
-                id="bidAmount"
-                name="bidAmount"
-                value={formData.bidAmount}
-                onChange={handleChange}
-                required
-                min="0"
-                step="0.01"
-                placeholder="Enter your bid amount"
-              />
+          {bid.status === BID_STATUS.ACCEPTED ||
+          bid.status === BID_STATUS.REJECTED ? (
+            <div
+              className="alert alert-warning"
+              style={{ marginBottom: "2rem" }}
+            >
+              {bid.status === BID_STATUS.ACCEPTED
+                ? "This bid has been accepted and can no longer be edited."
+                : "This bid has been rejected and can no longer be edited."}
             </div>
+          ) : (
+            <form onSubmit={handleSubmit}>
+              <div className="form-group">
+                <label htmlFor="bidAmount">Bid Amount ($)</label>
+                <input
+                  type="number"
+                  id="bidAmount"
+                  name="bidAmount"
+                  value={formData.bidAmount}
+                  onChange={handleChange}
+                  required
+                  min="0"
+                  step="0.01"
+                  placeholder="Enter your bid amount"
+                />
+              </div>
 
-            <div className="form-group">
-              <label htmlFor="timelineInDays">Timeline (Days)</label>
-              <input
-                type="number"
-                id="timelineInDays"
-                name="timelineInDays"
-                value={formData.timelineInDays}
-                onChange={handleChange}
-                required
-                min="1"
-                placeholder="Enter estimated days to complete"
-              />
-            </div>
+              <div className="form-group">
+                <label htmlFor="timelineInDays">Timeline (Days)</label>
+                <input
+                  type="number"
+                  id="timelineInDays"
+                  name="timelineInDays"
+                  value={formData.timelineInDays}
+                  onChange={handleChange}
+                  required
+                  min="1"
+                  placeholder="Enter estimated days to complete"
+                />
+              </div>
 
-            <div className="form-group">
-              <label htmlFor="proposal">Proposal</label>
-              <textarea
-                id="proposal"
-                name="proposal"
-                value={formData.proposal}
-                onChange={handleChange}
-                required
-                rows="6"
-                placeholder="Describe your approach, timeline, and qualifications..."
-              />
-            </div>
+              <div className="form-group">
+                <label htmlFor="proposal">Proposal</label>
+                <textarea
+                  id="proposal"
+                  name="proposal"
+                  value={formData.proposal}
+                  onChange={handleChange}
+                  required
+                  rows="6"
+                  placeholder="Describe your approach, timeline, and qualifications..."
+                />
+              </div>
 
-            <div className="form-group">
-              <label htmlFor="status">Status</label>
-              <select
-                id="status"
-                name="status"
-                value={formData.status}
-                onChange={handleChange}
-                required
-              >
-                <option value="Submitted">Submitted</option>
-                <option value="Accepted">Accepted</option>
-                <option value="Rejected">Rejected</option>
-                <option value="Withdrawn">Withdrawn</option>
-              </select>
-            </div>
+              {/* Status field removed: contractors cannot edit bid status */}
 
-            <div className="form-actions">
-              <Link to="/bids" className="btn btn-secondary">
-                Cancel
-              </Link>
-              <button
-                type="submit"
-                className="btn btn-primary"
-                disabled={submitting}
-              >
-                {submitting ? "Updating..." : "Update Bid"}
-              </button>
-            </div>
-          </form>
+              <div className="form-actions">
+                <Link to="/bids" className="btn btn-secondary">
+                  Cancel
+                </Link>
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  disabled={submitting}
+                >
+                  {submitting ? "Updating..." : "Update Bid"}
+                </button>
+              </div>
+            </form>
+          )}
         </div>
       </main>
     </div>

@@ -6,6 +6,7 @@ import {
   getCategories,
   deleteProject,
 } from "../services/apiService";
+import ConfirmModal from "../components/ConfirmModal";
 
 function Projects() {
   const [projects, setProjects] = useState([]);
@@ -13,6 +14,8 @@ function Projects() {
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [projectToDelete, setProjectToDelete] = useState(null);
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -60,20 +63,22 @@ function Projects() {
     setSelectedCategories([]);
   };
 
-  const handleDeleteProject = async (projectId) => {
-    if (
-      !window.confirm(
-        "Are you sure you want to delete this project? This action cannot be undone."
-      )
-    ) {
-      return;
-    }
+  const handleDeleteProject = (projectId) => {
+    setProjectToDelete(projectId);
+    setShowDeleteModal(true);
+  };
 
+  const confirmDeleteProject = async () => {
+    if (!projectToDelete) return;
     try {
-      await deleteProject(projectId);
-      setProjects(projects.filter((p) => p.id !== projectId));
+      await deleteProject(projectToDelete);
+      setProjects(projects.filter((p) => p.id !== projectToDelete));
+      setShowDeleteModal(false);
+      setProjectToDelete(null);
     } catch (err) {
       setError("Failed to delete project");
+      setShowDeleteModal(false);
+      setProjectToDelete(null);
     }
   };
 
@@ -183,67 +188,89 @@ function Projects() {
           </div>
         ) : (
           <div className="projects-grid">
-            {projects.map((project) => (
-              <div key={project.id} className="project-card">
-                <div className="project-header">
-                  <h3>{project.title}</h3>
-                  <span
-                    className={`status-badge status-${project.status.toLowerCase()}`}
-                  >
-                    {project.status}
-                  </span>
-                </div>
-                <p className="project-description">{project.description}</p>
-                <div className="project-details">
-                  <div className="detail-item">
-                    <strong>Location:</strong> {project.location}
-                  </div>
-                  <div className="detail-item">
-                    <strong>Budget:</strong> ${project.budget.toLocaleString()}
-                  </div>
-                  <div className="detail-item">
-                    <strong>Deadline:</strong>{" "}
-                    {new Date(project.bidDeadline).toLocaleDateString()}
-                  </div>
-                </div>
-                <div className="project-actions">
-                  <Link
-                    to={`/projects/${project.id}`}
-                    className="btn btn-primary"
-                  >
-                    View Details
-                  </Link>
-                  {user?.userType === "Contractor" && (
-                    <Link
-                      to={`/projects/${project.id}#bid`}
-                      className="btn btn-success"
+            {projects
+              .slice() // copy array
+              .sort((a, b) => {
+                if (user?.userType === "Owner") {
+                  // Owner's projects first
+                  if (a.ownerId === user.id && b.ownerId !== user.id) return -1;
+                  if (a.ownerId !== user.id && b.ownerId === user.id) return 1;
+                }
+                return 0;
+              })
+              .map((project) => (
+                <div key={project.id} className="project-card">
+                  <div className="project-header">
+                    <h3>{project.title}</h3>
+                    <span
+                      className={`status-badge status-${project.status.toLowerCase()}`}
                     >
-                      Submit Bid
+                      {project.status}
+                    </span>
+                  </div>
+                  <p className="project-description">{project.description}</p>
+                  <div className="project-details">
+                    <div className="detail-item">
+                      <strong>Location:</strong> {project.location}
+                    </div>
+                    <div className="detail-item">
+                      <strong>Budget:</strong> $
+                      {project.budget.toLocaleString()}
+                    </div>
+                    <div className="detail-item">
+                      <strong>Deadline:</strong>{" "}
+                      {new Date(project.bidDeadline).toLocaleDateString()}
+                    </div>
+                  </div>
+                  <div className="project-actions">
+                    <Link
+                      to={`/projects/${project.id}`}
+                      className="btn btn-primary"
+                    >
+                      View Details
                     </Link>
-                  )}
-                  {user?.userType === "Owner" &&
-                    user?.id === project.ownerId && (
-                      <>
-                        <Link
-                          to={`/projects/${project.id}/edit`}
-                          className="btn btn-secondary"
-                        >
-                          Edit
-                        </Link>
-                        <button
-                          onClick={() => handleDeleteProject(project.id)}
-                          className="btn btn-danger"
-                        >
-                          Delete
-                        </button>
-                      </>
+                    {user?.userType === "Contractor" && (
+                      <Link
+                        to={`/projects/${project.id}#bid`}
+                        className="btn btn-success"
+                      >
+                        Submit Bid
+                      </Link>
                     )}
+                    {user?.userType === "Owner" &&
+                      user?.id === project.ownerId && (
+                        <>
+                          <Link
+                            to={`/projects/${project.id}/edit`}
+                            className="btn btn-secondary"
+                          >
+                            Edit
+                          </Link>
+                          <button
+                            onClick={() => handleDeleteProject(project.id)}
+                            className="btn btn-danger"
+                          >
+                            Delete
+                          </button>
+                        </>
+                      )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
           </div>
         )}
       </main>
+      <ConfirmModal
+        open={showDeleteModal}
+        message="Are you sure you want to delete this project? This action cannot be undone."
+        onConfirm={confirmDeleteProject}
+        onCancel={() => {
+          setShowDeleteModal(false);
+          setProjectToDelete(null);
+        }}
+        confirmText="Delete"
+        cancelText="Cancel"
+      />
     </div>
   );
 }

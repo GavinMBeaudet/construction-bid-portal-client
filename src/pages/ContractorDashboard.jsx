@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { getBidsByContractor, getProjectById } from "../services/apiService";
+import { BID_STATUS } from "../constants/status";
 
 function ContractorDashboard() {
   const [bids, setBids] = useState([]);
@@ -48,8 +49,8 @@ function ContractorDashboard() {
     logout();
   };
 
-  const pendingBids = bids.filter((b) => b.status === "Pending").length;
-  const acceptedBids = bids.filter((b) => b.status === "Accepted").length;
+  const pendingBids = bids.filter((b) => b.status === BID_STATUS.PENDING).length;
+  const acceptedBids = bids.filter((b) => b.status === BID_STATUS.ACCEPTED).length;
 
   return (
     <div className="dashboard">
