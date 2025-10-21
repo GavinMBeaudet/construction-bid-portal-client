@@ -49,8 +49,12 @@ function ContractorDashboard() {
     logout();
   };
 
-  const pendingBids = bids.filter((b) => b.status === BID_STATUS.PENDING).length;
-  const acceptedBids = bids.filter((b) => b.status === BID_STATUS.ACCEPTED).length;
+  const pendingBids = bids.filter(
+    (b) => b.status === BID_STATUS.PENDING
+  ).length;
+  const acceptedBids = bids.filter(
+    (b) => b.status === BID_STATUS.ACCEPTED
+  ).length;
 
   return (
     <div className="dashboard">
@@ -127,10 +131,10 @@ function ContractorDashboard() {
                     <div className="bid-details">
                       <div className="detail-item">
                         <strong>Your Bid:</strong> $
-                        {bid.bidAmount.toLocaleString()}
+                        {bid.finalContractPrice?.toLocaleString()}
                       </div>
                       <div className="detail-item">
-                        <strong>Timeline:</strong> {bid.timelineInDays} days
+                        <strong>Timeline:</strong> {bid.completionDays} days
                       </div>
                       <div className="detail-item">
                         <strong>Submitted:</strong>{" "}

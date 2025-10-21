@@ -16,7 +16,7 @@ function ProjectBids() {
   const [bids, setBids] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [sortBy, setSortBy] = useState("bidAmount");
+  const [sortBy, setSortBy] = useState("finalContractPrice");
   const [sortOrder, setSortOrder] = useState("asc");
   const [selectedProposal, setSelectedProposal] = useState(null);
   const [awardingBid, setAwardingBid] = useState(null);
@@ -170,18 +170,18 @@ function ProjectBids() {
     total: bids.length,
     avgAmount:
       bids.length > 0
-        ? bids.reduce((sum, b) => sum + b.bidAmount, 0) / bids.length
+        ? bids.reduce((sum, b) => sum + b.finalContractPrice, 0) / bids.length
         : 0,
     lowestAmount:
-      bids.length > 0 ? Math.min(...bids.map((b) => b.bidAmount)) : 0,
+      bids.length > 0 ? Math.min(...bids.map((b) => b.finalContractPrice)) : 0,
     highestAmount:
-      bids.length > 0 ? Math.max(...bids.map((b) => b.bidAmount)) : 0,
+      bids.length > 0 ? Math.max(...bids.map((b) => b.finalContractPrice)) : 0,
     avgTimeline:
       bids.length > 0
-        ? bids.reduce((sum, b) => sum + b.timelineInDays, 0) / bids.length
+        ? bids.reduce((sum, b) => sum + b.completionDays, 0) / bids.length
         : 0,
     fastestTimeline:
-      bids.length > 0 ? Math.min(...bids.map((b) => b.timelineInDays)) : 0,
+      bids.length > 0 ? Math.min(...bids.map((b) => b.completionDays)) : 0,
   };
 
   return (
@@ -265,12 +265,12 @@ function ProjectBids() {
                   </th>
                   <th onClick={() => handleSort("bidAmount")}>
                     Bid Amount{" "}
-                    {sortBy === "bidAmount" &&
+                    {sortBy === "finalContractPrice" &&
                       (sortOrder === "asc" ? "▲" : "▼")}
                   </th>
                   <th onClick={() => handleSort("timelineInDays")}>
                     Timeline{" "}
-                    {sortBy === "timelineInDays" &&
+                    {sortBy === "completionDays" &&
                       (sortOrder === "asc" ? "▲" : "▼")}
                   </th>
                   <th onClick={() => handleSort("dateSubmitted")}>
@@ -284,10 +284,12 @@ function ProjectBids() {
               </thead>
               <tbody>
                 {sortedBids.map((bid) => {
-                  const isLowest = bid.bidAmount === stats.lowestAmount;
-                  const isHighest = bid.bidAmount === stats.highestAmount;
+                  const isLowest =
+                    bid.finalContractPrice === stats.lowestAmount;
+                  const isHighest =
+                    bid.finalContractPrice === stats.highestAmount;
                   const isFastest =
-                    bid.timelineInDays === stats.fastestTimeline;
+                    bid.completionDays === stats.fastestTimeline;
 
                   return (
                     <tr
@@ -306,7 +308,9 @@ function ProjectBids() {
                         </small>
                       </td>
                       <td className="bid-amount">
-                        <strong>${bid.bidAmount.toLocaleString()}</strong>
+                        <strong>
+                          ${bid.finalContractPrice?.toLocaleString()}
+                        </strong>
                         {isLowest && (
                           <span className="badge lowest">Lowest</span>
                         )}
@@ -315,7 +319,7 @@ function ProjectBids() {
                         )}
                       </td>
                       <td>
-                        {bid.timelineInDays} days
+                        {bid.completionDays} days
                         {isFastest && (
                           <span className="badge fastest">Fastest</span>
                         )}
@@ -366,11 +370,11 @@ function ProjectBids() {
                   <div className="proposal-meta">
                     <span>
                       <strong>Bid Amount:</strong> $
-                      {selectedProposal.bidAmount.toLocaleString()}
+                      {selectedProposal.finalContractPrice?.toLocaleString()}
                     </span>
                     <span>
                       <strong>Timeline:</strong>{" "}
-                      {selectedProposal.timelineInDays} days
+                      {selectedProposal.completionDays} days
                     </span>
                   </div>
                   <div className="proposal-text">

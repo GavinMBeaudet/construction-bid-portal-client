@@ -17,6 +17,7 @@ import EditProject from "./pages/EditProject";
 import Bids from "./pages/Bids";
 import EditBid from "./pages/EditBid";
 import PrivateRoute from "./components/PrivateRoute";
+import TennesseeBidForm from "./pages/TennesseeBidForm";
 
 function App() {
   return (
@@ -89,6 +90,14 @@ function App() {
             element={
               <PrivateRoute>
                 <EditBid />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/bids/new/tennessee"
+            element={
+              <PrivateRoute>
+                <TennesseeBidForm />
               </PrivateRoute>
             }
           />

@@ -1,10 +1,108 @@
+/* Tennessee Official Bid Form Styles */
+.tennessee-bid-form.container {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 24px rgba(102, 126, 234, 0.08);
+  padding: 2.5rem 2rem;
+  margin-top: 2.5rem;
+  margin-bottom: 2.5rem;
+  max-width: 800px;
+}
+
+.tennessee-bid-form h1 {
+  text-align: center;
+  font-size: 2.2rem;
+  color: #764ba2;
+  margin-bottom: 2rem;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.tennessee-bid-form fieldset {
+  border: 2px solid #e1e8ed;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+  padding: 1.5rem 1rem 1rem 1rem;
+  background: #f8f9fa;
+}
+
+.tennessee-bid-form legend {
+  font-weight: 600;
+  color: #667eea;
+  font-size: 1.15rem;
+  margin-bottom: 1rem;
+  padding: 0 0.5rem;
+}
+
+.tennessee-bid-form input,
+.tennessee-bid-form textarea {
+  width: 100%;
+  padding: 0.7rem;
+  margin-bottom: 1rem;
+  border: 1.5px solid #dee2e6;
+  border-radius: 6px;
+  font-size: 1rem;
+  background: #fff;
+  transition: border-color 0.2s;
+}
+
+.tennessee-bid-form input:focus,
+.tennessee-bid-form textarea:focus {
+  border-color: #764ba2;
+  outline: none;
+}
+
+.tennessee-bid-form label {
+  font-weight: 500;
+  color: #2c3e50;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+.tennessee-bid-form .signature-row {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.tennessee-bid-form .btn {
+  margin-top: 1.5rem;
+  margin-right: 1rem;
+}
+
+.tennessee-bid-form-preview.container {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 24px rgba(102, 126, 234, 0.08);
+  padding: 2.5rem 2rem;
+  margin-top: 2.5rem;
+  margin-bottom: 2.5rem;
+  max-width: 800px;
+}
+
+.tennessee-bid-form-preview h1 {
+  text-align: center;
+  font-size: 2rem;
+  color: #764ba2;
+  margin-bottom: 2rem;
+}
+
+.tennessee-bid-form-preview pre {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 1.5rem;
+  font-size: 1rem;
+  color: #2c3e50;
+  margin-bottom: 2rem;
+  overflow-x: auto;
+}
 /* Award Modal Styles */
 .award-modal {
   max-width: 420px;
   background: #fffbe6;
   border: 2px solid #ffe066;
   border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(255, 224, 102, 0.25), 0 2px 8px rgba(44, 62, 80, 0.08);
+  box-shadow: 0 8px 32px rgba(255, 224, 102, 0.25),
+    0 2px 8px rgba(44, 62, 80, 0.08);
 }
 
 .award-confirmation {

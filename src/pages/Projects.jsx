@@ -231,7 +231,7 @@ function Projects() {
                     </Link>
                     {user?.userType === "Contractor" && (
                       <Link
-                        to={`/projects/${project.id}#bid`}
+                        to={`/bids/new/tennessee?projectId=${project.id}`}
                         className="btn btn-success"
                       >
                         Submit Bid

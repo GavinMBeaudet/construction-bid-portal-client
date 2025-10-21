@@ -105,10 +105,13 @@ export const deleteBid = async (id, userId) => {
 };
 
 export const awardBid = async (bidId, userId) => {
-  const response = await fetch(`${API_URL}/bids/${bidId}/award?userId=${userId}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-  });
+  const response = await fetch(
+    `${API_URL}/bids/${bidId}/award?userId=${userId}`,
+    {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+    }
+  );
   if (!response.ok) {
     const error = await response.json();
     throw new Error(error.detail || "Failed to award bid");

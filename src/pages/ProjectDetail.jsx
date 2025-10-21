@@ -20,11 +20,7 @@ function ProjectDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const [showBidForm, setShowBidForm] = useState(false);
-  const [bidAmount, setBidAmount] = useState("");
-  const [timelineInDays, setTimelineInDays] = useState("");
-  const [proposal, setProposal] = useState("");
-  const [submitting, setSubmitting] = useState(false);
+  // Legacy bid form state removed
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   useEffect(() => {
@@ -57,28 +53,7 @@ function ProjectDetail() {
     }
   };
 
-  const handleSubmitBid = async (e) => {
-    e.preventDefault();
-    setSubmitting(true);
-    setError("");
-
-    try {
-      await createBid({
-        projectId: parseInt(id),
-        contractorId: user.id,
-        bidAmount: parseFloat(bidAmount),
-        timelineInDays: parseInt(timelineInDays),
-        proposal,
-      });
-
-      alert("Bid submitted successfully!");
-      navigate("/bids");
-    } catch (err) {
-      setError(err.message || "Failed to submit bid");
-    } finally {
-      setSubmitting(false);
-    }
-  };
+  // Legacy bid form handler removed
 
   const handleDeleteProject = () => {
     setShowDeleteModal(true);
@@ -181,14 +156,14 @@ function ProjectDetail() {
             </div>
           </div>
 
-          {isContractor && bids.length === 0 && !showBidForm && (
+          {isContractor && bids.length === 0 && (
             <div className="action-section">
-              <button
-                onClick={() => setShowBidForm(true)}
+              <Link
+                to={`/bids/new/tennessee?projectId=${id}`}
                 className="btn btn-primary btn-large"
               >
                 Submit a Bid for This Project
-              </button>
+              </Link>
             </div>
           )}
 
@@ -201,12 +176,13 @@ function ProjectDetail() {
                     <div className="bid-header">
                       <h4>Your Submitted Bid</h4>
                       <span className="bid-amount">
-                        ${bid.bidAmount.toLocaleString()}
+                        ${bid.finalContractPrice?.toLocaleString()}
                       </span>
                     </div>
                     <p className="bid-proposal">{bid.proposal}</p>
                     <div className="bid-meta">
                       <span>Timeline: {bid.timelineInDays} days</span>
+                      <span>Timeline: {bid.completionDays} days</span>
                       <span>
                         Submitted:{" "}
                         {new Date(bid.dateSubmitted).toLocaleDateString()}
@@ -231,68 +207,7 @@ function ProjectDetail() {
             </div>
           )}
 
-          {isContractor && bids.length === 0 && showBidForm && (
-            <div className="bid-form-section">
-              <h3>Submit Your Bid</h3>
-              <form onSubmit={handleSubmitBid}>
-                <div className="form-group">
-                  <label htmlFor="bidAmount">Bid Amount ($)</label>
-                  <input
-                    type="number"
-                    id="bidAmount"
-                    value={bidAmount}
-                    onChange={(e) => setBidAmount(e.target.value)}
-                    required
-                    min="0"
-                    step="0.01"
-                    placeholder="Enter your bid amount"
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="timelineInDays">Timeline (Days)</label>
-                  <input
-                    type="number"
-                    id="timelineInDays"
-                    value={timelineInDays}
-                    onChange={(e) => setTimelineInDays(e.target.value)}
-                    required
-                    min="1"
-                    placeholder="Enter estimated days to complete"
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="proposal">Proposal</label>
-                  <textarea
-                    id="proposal"
-                    value={proposal}
-                    onChange={(e) => setProposal(e.target.value)}
-                    required
-                    placeholder="Describe your approach, timeline, and qualifications..."
-                    rows="6"
-                  />
-                </div>
-
-                <div className="form-actions">
-                  <button
-                    type="button"
-                    onClick={() => setShowBidForm(false)}
-                    className="btn btn-secondary"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="btn btn-primary"
-                    disabled={submitting}
-                  >
-                    {submitting ? "Submitting..." : "Submit Bid"}
-                  </button>
-                </div>
-              </form>
-            </div>
-          )}
+          {/* Legacy bid form UI removed */}
 
           {isOwner && (
             <div className="bids-section">
@@ -324,7 +239,8 @@ function ProjectDetail() {
                           {bid.contractor?.lastName}
                         </h4>
                         <span className="bid-amount">
-                          ${bid.bidAmount.toLocaleString()}
+                          ${bid.finalContractPrice?.toLocaleString()}
+                          <span>Timeline: {bid.completionDays} days</span>
                         </span>
                       </div>
                       <p className="bid-proposal">{bid.proposal}</p>

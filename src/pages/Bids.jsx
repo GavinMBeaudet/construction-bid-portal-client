@@ -108,10 +108,14 @@ function Bids() {
               <div className="bid-item-content">
                 <div className="bid-details">
                   <div className="detail-item">
-                    <strong>Your Bid:</strong> ${bid.bidAmount.toLocaleString()}
+                    <strong>Your Bid:</strong> $
+                    {bid.finalContractPrice
+                      ? Number(bid.finalContractPrice).toLocaleString()
+                      : "-"}
                   </div>
                   <div className="detail-item">
-                    <strong>Timeline:</strong> {bid.timelineInDays} days
+                    <strong>Timeline:</strong>{" "}
+                    {bid.completionDays ? bid.completionDays : "-"} days
                   </div>
                   <div className="detail-item">
                     <strong>Project Budget:</strong> $
