@@ -29,9 +29,16 @@ function Login() {
       await login(formData.email, formData.password);
       navigate("/dashboard");
     } catch (err) {
-      setError(
-        err.message || "Failed to login. Please check your credentials."
-      );
+      // Show a specific warning for wrong password
+      if (err.message && err.message.toLowerCase().includes("password")) {
+        setError("Incorrect password. Please try again.");
+      } else if (err.message && err.message.toLowerCase().includes("email")) {
+        setError("Email not found. Please check your email or register.");
+      } else {
+        setError(
+          err.message || "Failed to login. Please check your credentials."
+        );
+      }
     } finally {
       setLoading(false);
     }

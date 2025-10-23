@@ -1,15 +1,42 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { createBid } from "../services/apiService";
 import { useAuth } from "../contexts/AuthContext";
 
 function TennesseeBidForm() {
+  const { user } = useAuth();
+  // Autofill contractor info when user changes
+  useEffect(() => {
+    if (!user) return;
+    setForm((prev) => ({
+      ...prev,
+      contractorName:
+        user.firstName && user.lastName
+          ? `${user.firstName} ${user.lastName}`
+          : "",
+      contractorAddress: user.address || "",
+      contractorCity: user.city || "",
+      contractorState: user.state || "",
+      contractorZip: user.zip || "",
+      contractorLicense: user.licenseNumber || "",
+    }));
+  }, [user]);
+  const navigate =
+    window.history && window.history.length > 1
+      ? () => window.history.back()
+      : () => window.location.assign("/dashboard");
+  const params = new URLSearchParams(window.location.search);
+  const projectId = Number(params.get("projectId"));
+  const [project, setProject] = useState(null);
   const [form, setForm] = useState({
-    contractorName: "",
-    contractorAddress: "",
-    contractorCity: "",
-    contractorState: "",
-    contractorZip: "",
-    contractorLicense: "",
+    contractorName:
+      user?.firstName && user?.lastName
+        ? `${user.firstName} ${user.lastName}`
+        : "",
+    contractorAddress: user?.address || "",
+    contractorCity: user?.city || "",
+    contractorState: user?.state || "",
+    contractorZip: user?.zip || "",
+    contractorLicense: user?.licenseNumber || "",
     ownerName: "",
     ownerAddress: "",
     ownerCity: "",
@@ -34,18 +61,49 @@ function TennesseeBidForm() {
     completionType: "", // 'days', 'other'
     completionDays: "",
     completionOther: "",
-  finalContractPrice: "",
-  completionDays: "",
-  progressRetentionPercent: "",
-  progressRetentionDays: "",
-  finalPaymentDays: "",
-  terminationDate: "",
-  proposalDate: "",
-  warrantyYears: "",
-  additionalProvisions: "",
-  contractorSignatures: [{ name: "", title: "", date: "" }],
-  ownerSignatures: [{ name: "", title: "", date: "" }],
+    finalContractPrice: "",
+    progressRetentionPercent: "",
+    progressRetentionDays: "",
+    finalPaymentDays: "",
+    terminationDate: "",
+    proposalDate: "",
+    warrantyYears: "",
+    additionalProvisions: "",
+    contractorSignatures: [{ name: "", title: "", date: "" }],
+    ownerSignatures: [{ name: "", title: "", date: "" }],
   });
+
+  // Autofill project info when loaded
+  useEffect(() => {
+    async function fetchProject() {
+      if (!projectId) return;
+      try {
+        const res = await import("../services/apiService");
+        const projectData = await res.getProjectById(projectId);
+        setProject(projectData);
+        setForm((prev) => ({
+          ...prev,
+          projectNumber: projectData.projectNumber || "",
+          projectAddress: projectData.address || "",
+          projectCity: projectData.city || "",
+          projectState: projectData.state || "",
+          projectZip: projectData.zip || "",
+          projectDescription: projectData.description || "",
+          ownerName:
+            projectData.owner?.firstName && projectData.owner?.lastName
+              ? `${projectData.owner.firstName} ${projectData.owner.lastName}`
+              : "",
+          ownerAddress: projectData.owner?.address || "",
+          ownerCity: projectData.owner?.city || "",
+          ownerState: projectData.owner?.state || "",
+          ownerZip: projectData.owner?.zip || "",
+        }));
+      } catch (err) {
+        // fail silently
+      }
+    }
+    fetchProject();
+  }, [projectId, user]);
   const [preview, setPreview] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -75,9 +133,7 @@ function TennesseeBidForm() {
     setPreview(false);
   };
 
-  const { user } = useAuth();
-  const params = new URLSearchParams(window.location.search);
-  const projectId = Number(params.get("projectId"));
+  // ...existing code...
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -108,7 +164,8 @@ function TennesseeBidForm() {
       await createBid(payload);
       setSuccess(true);
       setPreview(false);
-      // Optionally reset form or redirect
+      // Redirect to project details page
+      window.location.assign(`/projects/${projectId}`);
     } catch (err) {
       setError(err.message || "Failed to submit bid");
     } finally {
@@ -118,147 +175,219 @@ function TennesseeBidForm() {
 
   if (preview) {
     return (
-      <div className="tennessee-bid-form-preview container">
-        <h1>Preview Tennessee Bid Form</h1>
-        <div className="bid-form-table">
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+      <div
+        className="tennessee-bid-form-preview container"
+        style={{
+          maxWidth: 900,
+          background: "#fff",
+          borderRadius: 12,
+          boxShadow: "0 2px 16px #0001",
+          padding: 32,
+        }}
+      >
+        <h2 style={{ textAlign: "center", color: "#6c2eb7", marginBottom: 24 }}>
+          BID FORM FOR CONSTRUCTION OF BUILDING
+        </h2>
+        <table
+          style={{
+            width: "100%",
+            borderCollapse: "collapse",
+            fontSize: 16,
+            marginBottom: 24,
+          }}
+        >
+          <tbody>
+            <tr style={{ background: "#f3f3f3" }}>
+              <th style={{ textAlign: "left", padding: 8, width: "50%" }}>
+                Contractor
+              </th>
+              <th style={{ textAlign: "left", padding: 8, width: "50%" }}>
+                Owner
+              </th>
+            </tr>
+            <tr>
+              <td style={{ padding: 8 }}>{form.contractorName}</td>
+              <td style={{ padding: 8 }}>{form.ownerName}</td>
+            </tr>
+            <tr>
+              <td style={{ padding: 8 }}>{form.contractorAddress}</td>
+              <td style={{ padding: 8 }}>{form.ownerAddress}</td>
+            </tr>
+            <tr>
+              <td style={{ padding: 8 }}>
+                {form.contractorCity}, {form.contractorState}{" "}
+                {form.contractorZip}
+              </td>
+              <td style={{ padding: 8 }}>
+                {form.ownerCity}, {form.ownerState} {form.ownerZip}
+              </td>
+            </tr>
+            <tr>
+              <td style={{ padding: 8 }}>License: {form.contractorLicense}</td>
+              <td style={{ padding: 8 }}></td>
+            </tr>
+            <tr style={{ background: "#f3f3f3" }}>
+              <th style={{ padding: 8 }}>Lender</th>
+              <td style={{ padding: 8 }}>{form.lenderName}</td>
+            </tr>
+            <tr>
+              <th style={{ padding: 8 }}>Project Number</th>
+              <td style={{ padding: 8 }}>{form.projectNumber}</td>
+            </tr>
+            <tr>
+              <th style={{ padding: 8 }}>Project Address</th>
+              <td style={{ padding: 8 }}>
+                {form.projectAddress}, {form.projectCity}, {form.projectState}{" "}
+                {form.projectZip}
+              </td>
+            </tr>
+            <tr>
+              <th style={{ padding: 8 }}>Project Description</th>
+              <td style={{ padding: 8 }}>{form.projectDescription}</td>
+            </tr>
+            <tr>
+              <th style={{ padding: 8 }}>Other Contract Documents</th>
+              <td style={{ padding: 8 }}>{form.otherContractDocs}</td>
+            </tr>
+            <tr>
+              <th style={{ padding: 8 }}>Work Involved</th>
+              <td style={{ padding: 8 }}>{form.workInvolved}</td>
+            </tr>
+            <tr style={{ background: "#f3f3f3" }}>
+              <th style={{ padding: 8 }}>Commencement of Work</th>
+              <td style={{ padding: 8 }}>
+                {form.commencementType === "notice"
+                  ? `Upon ${form.commencementDays} days notice from Owner`
+                  : form.commencementType === "acceptance"
+                  ? `Within ${form.commencementDays} days of acceptance`
+                  : `Other: ${form.commencementOther}`}
+              </td>
+            </tr>
+            <tr>
+              <th style={{ padding: 8 }}>Completion of Work</th>
+              <td style={{ padding: 8 }}>
+                {form.completionType === "days"
+                  ? `Within ${form.completionDays} days commencement of work`
+                  : `Other: ${form.completionOther}`}
+              </td>
+            </tr>
+            <tr style={{ background: "#f3f3f3" }}>
+              <th style={{ padding: 8 }}>Final Contract Price</th>
+              <td style={{ padding: 8 }}>${form.finalContractPrice}</td>
+            </tr>
+            <tr>
+              <th style={{ padding: 8 }}>Progress Payment</th>
+              <td style={{ padding: 8 }}>
+                Less {form.progressRetentionPercent}% retention to be paid
+                within {form.progressRetentionDays} days of application of work
+                completed
+              </td>
+            </tr>
+            <tr>
+              <th style={{ padding: 8 }}>Final Payment</th>
+              <td style={{ padding: 8 }}>
+                Including any retention to be paid within{" "}
+                {form.finalPaymentDays} days of Notice of Completion and
+                Application for Final Payment
+              </td>
+            </tr>
+            <tr style={{ background: "#f3f3f3" }}>
+              <th style={{ padding: 8 }}>Termination of Proposal</th>
+              <td style={{ padding: 8 }}>
+                If not accepted before {form.terminationDate}
+              </td>
+            </tr>
+            <tr>
+              <th style={{ padding: 8 }}>Date of Proposal</th>
+              <td style={{ padding: 8 }}>{form.proposalDate}</td>
+            </tr>
+            <tr>
+              <th style={{ padding: 8 }}>Warranty Period</th>
+              <td style={{ padding: 8 }}>
+                {form.warrantyYears} years from completion
+              </td>
+            </tr>
+            <tr>
+              <th style={{ padding: 8 }}>Additional Provisions</th>
+              <td style={{ padding: 8 }}>{form.additionalProvisions}</td>
+            </tr>
+          </tbody>
+        </table>
+        <div style={{ marginBottom: 24 }}>
+          <div
+            style={{
+              fontWeight: "bold",
+              background: "#f3f3f3",
+              padding: 8,
+              borderTop: "1px solid #ccc",
+              borderBottom: "1px solid #ccc",
+            }}
+          >
+            Proposal by Contractor
+          </div>
+          <table
+            style={{
+              width: "100%",
+              borderCollapse: "collapse",
+              marginBottom: 16,
+            }}
+          >
+            <thead>
+              <tr>
+                <th style={{ padding: 8, width: "40%" }}>Signature</th>
+                <th style={{ padding: 8, width: "30%" }}>Title</th>
+                <th style={{ padding: 8, width: "30%" }}>Date</th>
+              </tr>
+            </thead>
             <tbody>
+              {form.contractorSignatures
+                .filter((sig) => sig.name && sig.title && sig.date)
+                .map((sig, idx) => (
+                  <tr key={idx}>
+                    <td style={{ padding: 8 }}>{sig.name}</td>
+                    <td style={{ padding: 8 }}>{sig.title}</td>
+                    <td style={{ padding: 8 }}>{sig.date}</td>
+                  </tr>
+                ))}
+            </tbody>
+          </table>
+        </div>
+        <div style={{ marginBottom: 24 }}>
+          <div
+            style={{
+              fontWeight: "bold",
+              background: "#f3f3f3",
+              padding: 8,
+              borderTop: "1px solid #ccc",
+              borderBottom: "1px solid #ccc",
+            }}
+          >
+            Acceptance by Owner
+          </div>
+          <table
+            style={{
+              width: "100%",
+              borderCollapse: "collapse",
+              marginBottom: 16,
+            }}
+          >
+            <thead>
               <tr>
-                <th style={{ textAlign: "left" }}>Contractor</th>
-                <th style={{ textAlign: "left" }}>Owner</th>
+                <th style={{ padding: 8, width: "40%" }}>Signature</th>
+                <th style={{ padding: 8, width: "30%" }}>Title</th>
+                <th style={{ padding: 8, width: "30%" }}>Date</th>
               </tr>
-              <tr>
-                <td>{form.contractorName}</td>
-                <td>{form.ownerName}</td>
-              </tr>
-              <tr>
-                <td>{form.contractorAddress}</td>
-                <td>{form.ownerAddress}</td>
-              </tr>
-              <tr>
-                <td>
-                  {form.contractorCity}, {form.contractorState}{" "}
-                  {form.contractorZip}
-                </td>
-                <td>
-                  {form.ownerCity}, {form.ownerState} {form.ownerZip}
-                </td>
-              </tr>
-              <tr>
-                <td>License: {form.contractorLicense}</td>
-                <td></td>
-              </tr>
-              <tr>
-                <th>Lender</th>
-                <td>{form.lenderName}</td>
-              </tr>
-              <tr>
-                <th>Project Number</th>
-                <td>{form.projectNumber}</td>
-              </tr>
-              <tr>
-                <th>Project Address</th>
-                <td>
-                  {form.projectAddress}, {form.projectCity}, {form.projectState}{" "}
-                  {form.projectZip}
-                </td>
-              </tr>
-              <tr>
-                <th>Project Description</th>
-                <td colSpan={2}>{form.projectDescription}</td>
-              </tr>
-              <tr>
-                <th>Other Contract Documents</th>
-                <td colSpan={2}>{form.otherContractDocs}</td>
-              </tr>
-              <tr>
-                <th>Work Involved</th>
-                <td colSpan={2}>{form.workInvolved}</td>
-              </tr>
-              <tr>
-                <th>Commencement of Work</th>
-                <td colSpan={2}>
-                  {form.commencementType === "notice"
-                    ? `Upon ${form.commencementDays} days notice from Owner`
-                    : form.commencementType === "acceptance"
-                    ? `Within ${form.commencementDays} days of acceptance`
-                    : `Other: ${form.commencementOther}`}
-                </td>
-              </tr>
-              <tr>
-                <th>Completion of Work</th>
-                <td colSpan={2}>
-                  {form.completionType === "days"
-                    ? `Within ${form.completionDays} days commencement of work`
-                    : `Other: ${form.completionOther}`}
-                </td>
-              </tr>
-              <tr>
-                <th>Final Contract Price</th>
-                <td colSpan={2}>${form.finalContractPrice}</td>
-              </tr>
-              <tr>
-                <th>Progress Payment</th>
-                <td colSpan={2}>
-                  Less {form.progressRetentionPercent}% retention to be paid
-                  within {form.progressRetentionDays} days of application of
-                  work completed
-                </td>
-              </tr>
-              <tr>
-                <th>Final Payment</th>
-                <td colSpan={2}>
-                  Including any retention to be paid within{" "}
-                  {form.finalPaymentDays} days of Notice of Completion and
-                  Application for Final Payment
-                </td>
-              </tr>
-              <tr>
-                <th>Termination of Proposal</th>
-                <td colSpan={2}>
-                  If not accepted before {form.terminationDate}
-                </td>
-              </tr>
-              <tr>
-                <th>Date of Proposal</th>
-                <td colSpan={2}>{form.proposalDate}</td>
-              </tr>
-              <tr>
-                <th>Warranty Period</th>
-                <td colSpan={2}>{form.warrantyYears} years from completion</td>
-              </tr>
-              <tr>
-                <th>Additional Provisions</th>
-                <td colSpan={2}>{form.additionalProvisions}</td>
-              </tr>
-              <tr>
-                <th>Proposal by Contractor</th>
-                <td colSpan={2}>
-                  {form.contractorSignatures
-                    .filter((sig) => sig.name && sig.title && sig.date)
-                    .map((sig, idx) => (
-                      <div key={idx} style={{ marginBottom: "0.5rem" }}>
-                        <strong>Signature:</strong> {sig.name},{" "}
-                        <strong>Title:</strong> {sig.title},{" "}
-                        <strong>Date:</strong> {sig.date}
-                      </div>
-                    ))}
-                </td>
-              </tr>
-              <tr>
-                <th>Acceptance by Owner</th>
-                <td colSpan={2}>
-                  {form.ownerSignatures
-                    .filter((sig) => sig.name && sig.title && sig.date)
-                    .map((sig, idx) => (
-                      <div key={idx} style={{ marginBottom: "0.5rem" }}>
-                        <strong>Signature:</strong> {sig.name},{" "}
-                        <strong>Title:</strong> {sig.title},{" "}
-                        <strong>Date:</strong> {sig.date}
-                      </div>
-                    ))}
-                </td>
-              </tr>
+            </thead>
+            <tbody>
+              {form.ownerSignatures
+                .filter((sig) => sig.name && sig.title && sig.date)
+                .map((sig, idx) => (
+                  <tr key={idx}>
+                    <td style={{ padding: 8 }}>{sig.name}</td>
+                    <td style={{ padding: 8 }}>{sig.title}</td>
+                    <td style={{ padding: 8 }}>{sig.date}</td>
+                  </tr>
+                ))}
             </tbody>
           </table>
         </div>
@@ -266,16 +395,18 @@ function TennesseeBidForm() {
         {success && (
           <div className="alert alert-success">Bid submitted successfully!</div>
         )}
-        <button className="btn btn-secondary" onClick={handleEdit}>
-          Edit
-        </button>
-        <button
-          className="btn btn-primary"
-          onClick={handleSubmit}
-          disabled={submitting}
-        >
-          Submit
-        </button>
+        <div style={{ display: "flex", gap: 12, justifyContent: "flex-end" }}>
+          <button className="btn btn-secondary" onClick={handleEdit}>
+            Edit
+          </button>
+          <button
+            className="btn btn-primary"
+            onClick={handleSubmit}
+            disabled={submitting}
+          >
+            Submit
+          </button>
+        </div>
       </div>
     );
   }
@@ -288,6 +419,16 @@ function TennesseeBidForm() {
         <div className="alert alert-success">Bid submitted successfully!</div>
       )}
       <form>
+        <fieldset>
+          <legend>Work Involved</legend>
+          <textarea
+            name="workInvolved"
+            value={form.workInvolved}
+            onChange={handleChange}
+            placeholder="Describe the scope of work, materials, and methods you propose for this bid."
+            style={{ width: "100%", minHeight: 80, marginBottom: 8 }}
+          />
+        </fieldset>
         <fieldset>
           <legend>Contractor Information</legend>
           <input
@@ -362,6 +503,11 @@ function TennesseeBidForm() {
         </fieldset>
         <fieldset>
           <legend>Lender Information</legend>
+          <div
+            style={{ color: "#888", fontSize: "0.95em", marginBottom: "0.5em" }}
+          >
+            (Optional: Only fill out if applicable)
+          </div>
           <input
             name="lenderName"
             value={form.lenderName}
@@ -660,52 +806,16 @@ function TennesseeBidForm() {
             </div>
           ))}
         </fieldset>
-        <fieldset>
-          <legend>Acceptance by Owner</legend>
-          {form.ownerSignatures.map((sig, idx) => (
-            <div key={idx} className="signature-row">
-              <input
-                placeholder="Signature Name"
-                value={sig.name}
-                onChange={(e) =>
-                  handleSignatureChange(
-                    "ownerSignatures",
-                    idx,
-                    "name",
-                    e.target.value
-                  )
-                }
-              />
-              <input
-                placeholder="Title"
-                value={sig.title}
-                onChange={(e) =>
-                  handleSignatureChange(
-                    "ownerSignatures",
-                    idx,
-                    "title",
-                    e.target.value
-                  )
-                }
-              />
-              <input
-                type="date"
-                placeholder="Date"
-                value={sig.date}
-                onChange={(e) =>
-                  handleSignatureChange(
-                    "ownerSignatures",
-                    idx,
-                    "date",
-                    e.target.value
-                  )
-                }
-              />
-            </div>
-          ))}
-        </fieldset>
         <button className="btn btn-secondary" onClick={handlePreview}>
           Preview
+        </button>
+        <button
+          type="button"
+          className="btn btn-outline"
+          style={{ marginLeft: "0.5rem" }}
+          onClick={navigate}
+        >
+          Cancel
         </button>
       </form>
     </div>

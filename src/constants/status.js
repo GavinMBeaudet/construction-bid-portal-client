@@ -5,8 +5,6 @@ export const PROJECT_STATUS = {
 };
 
 export const BID_STATUS = {
-  SUBMITTED: "Submitted",
-  UNDER_REVIEW: "Under Review",
   ACCEPTED: "Accepted",
   REJECTED: "Rejected",
   PENDING: "Pending",

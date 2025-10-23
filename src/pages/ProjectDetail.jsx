@@ -181,8 +181,14 @@ function ProjectDetail() {
                     </div>
                     <p className="bid-proposal">{bid.proposal}</p>
                     <div className="bid-meta">
-                      <span>Timeline: {bid.timelineInDays} days</span>
                       <span>Timeline: {bid.completionDays} days</span>
+                      <span>
+                        Contractor: {bid.contractorName} (
+                        {bid.contractorLicense})
+                      </span>
+                      <span>Owner: {bid.ownerName}</span>
+                      <span>Retention: {bid.progressRetentionPercent}%</span>
+                      <span>Warranty: {bid.warrantyYears} year(s)</span>
                       <span>
                         Submitted:{" "}
                         {new Date(bid.dateSubmitted).toLocaleDateString()}
@@ -239,13 +245,20 @@ function ProjectDetail() {
                           {bid.contractor?.lastName}
                         </h4>
                         <span className="bid-amount">
-                          ${bid.finalContractPrice?.toLocaleString()}
+                          ${bid.finalContractPrice?.toLocaleString()}{" "}
                           <span>Timeline: {bid.completionDays} days</span>
                         </span>
                       </div>
                       <p className="bid-proposal">{bid.proposal}</p>
                       <div className="bid-meta">
-                        <span>Timeline: {bid.timelineInDays} days</span>
+                        <span>Timeline: {bid.completionDays} days</span>
+                        <span>
+                          Contractor: {bid.contractorName} (
+                          {bid.contractorLicense})
+                        </span>
+                        <span>Owner: {bid.ownerName}</span>
+                        <span>Retention: {bid.progressRetentionPercent}%</span>
+                        <span>Warranty: {bid.warrantyYears} year(s)</span>
                         <span>
                           Submitted:{" "}
                           {new Date(bid.dateSubmitted).toLocaleDateString()}

@@ -8,10 +8,13 @@ import {
 } from "../services/apiService";
 
 function ProjectBids() {
+  // State for owner acceptance info
+  const [ownerSignature, setOwnerSignature] = useState("");
+  const [ownerTitle, setOwnerTitle] = useState("");
+  const [ownerDate, setOwnerDate] = useState("");
   const { id } = useParams();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-
   const [project, setProject] = useState(null);
   const [bids, setBids] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -65,24 +68,28 @@ function ProjectBids() {
     setError("");
   };
 
-  const confirmAward = async () => {
+  const confirmAward = async (acceptanceInfo) => {
     if (!awardingBid) return;
     setAwarding(true);
     setError("");
     try {
-      const response = await awardBid(awardingBid.id, user.id);
+      const response = await awardBid(awardingBid.id, user.id, acceptanceInfo);
       console.log("Award Bid API response:", response);
-      // Refresh project and bids after awarding
-      await loadProjectAndBids();
-      setAwardingBid(null);
-      // Optionally show a toast or success message here
+      // Redirect to project details page after awarding
+      navigate(`/projects/${id}`);
     } catch (err) {
-      setError(err.message || "Failed to award bid");
+      // Show a more descriptive error if project is not open
+      if (err.message && err.message.includes("already been awarded")) {
+        setError(
+          "This project is already in progress or awarded. You cannot award another bid. Please check the project status."
+        );
+      } else {
+        setError(err.message || "Failed to award bid");
+      }
     } finally {
       setAwarding(false);
     }
   };
-
   const cancelAward = () => {
     setAwardingBid(null);
     setError("");
@@ -100,24 +107,47 @@ function ProjectBids() {
   const getSortedBids = () => {
     return [...bids].sort((a, b) => {
       let aValue, bValue;
-
-      if (sortBy === "contractor") {
-        aValue = `${a.contractor?.firstName} ${a.contractor?.lastName}`;
-        bValue = `${b.contractor?.firstName} ${b.contractor?.lastName}`;
-        const comparison = aValue.localeCompare(bValue);
-        return sortOrder === "asc" ? comparison : -comparison;
-      } else if (sortBy === "dateSubmitted") {
-        aValue = new Date(a.dateSubmitted);
-        bValue = new Date(b.dateSubmitted);
-      } else {
-        aValue = a[sortBy];
-        bValue = b[sortBy];
+      switch (sortBy) {
+        case "contractor":
+          aValue = `${a.contractor?.firstName} ${a.contractor?.lastName}`;
+          bValue = `${b.contractor?.firstName} ${b.contractor?.lastName}`;
+          break;
+        case "finalContractPrice":
+          aValue = a.finalContractPrice;
+          bValue = b.finalContractPrice;
+          break;
+        case "completionDays":
+          aValue = a.completionDays;
+          bValue = b.completionDays;
+          break;
+        case "ownerName":
+          aValue = a.ownerName;
+          bValue = b.ownerName;
+          break;
+        case "progressRetentionPercent":
+          aValue = a.progressRetentionPercent;
+          bValue = b.progressRetentionPercent;
+          break;
+        case "warrantyYears":
+          aValue = a.warrantyYears;
+          bValue = b.warrantyYears;
+          break;
+        case "dateSubmitted":
+          aValue = new Date(a.dateSubmitted);
+          bValue = new Date(b.dateSubmitted);
+          break;
+        default:
+          aValue = a[sortBy];
+          bValue = b[sortBy];
       }
-
       const multiplier = sortOrder === "asc" ? 1 : -1;
+      if (typeof aValue === "string" && typeof bValue === "string") {
+        return aValue.localeCompare(bValue) * multiplier;
+      }
       return (aValue - bValue) * multiplier;
     });
   };
+  const sortedBids = getSortedBids();
 
   const handleLogout = () => {
     logout();
@@ -134,7 +164,6 @@ function ProjectBids() {
   if (loading) {
     return <div className="loading">Loading bid comparison...</div>;
   }
-
   if (error) {
     return (
       <div className="dashboard">
@@ -160,12 +189,6 @@ function ProjectBids() {
     );
   }
 
-  if (!project) {
-    return <div className="error">Project not found</div>;
-  }
-
-  const sortedBids = getSortedBids();
-
   const stats = {
     total: bids.length,
     avgAmount:
@@ -176,12 +199,14 @@ function ProjectBids() {
       bids.length > 0 ? Math.min(...bids.map((b) => b.finalContractPrice)) : 0,
     highestAmount:
       bids.length > 0 ? Math.max(...bids.map((b) => b.finalContractPrice)) : 0,
-    avgTimeline:
-      bids.length > 0
-        ? bids.reduce((sum, b) => sum + b.completionDays, 0) / bids.length
-        : 0,
-    fastestTimeline:
-      bids.length > 0 ? Math.min(...bids.map((b) => b.completionDays)) : 0,
+    avgTimeline: (() => {
+      const validDays = bids
+        .map((b) => Number(b.completionDays))
+        .filter((val) => typeof val === "number" && !isNaN(val));
+      return validDays.length > 0
+        ? validDays.reduce((sum, val) => sum + val, 0) / validDays.length
+        : 0;
+    })(),
   };
 
   return (
@@ -236,12 +261,8 @@ function ProjectBids() {
             <p>Highest Bid</p>
           </div>
           <div className="stat-card">
-            <h3>{Math.round(stats.avgTimeline)}</h3>
+            <h3>{stats.avgTimeline ? Math.round(stats.avgTimeline) : 0}</h3>
             <p>Avg Timeline (days)</p>
-          </div>
-          <div className="stat-card">
-            <h3>{stats.fastestTimeline}</h3>
-            <p>Fastest Timeline (days)</p>
           </div>
         </div>
 
@@ -263,14 +284,24 @@ function ProjectBids() {
                     {sortBy === "contractor" &&
                       (sortOrder === "asc" ? "▲" : "▼")}
                   </th>
-                  <th onClick={() => handleSort("bidAmount")}>
+                  <th onClick={() => handleSort("finalContractPrice")}>
                     Bid Amount{" "}
                     {sortBy === "finalContractPrice" &&
                       (sortOrder === "asc" ? "▲" : "▼")}
                   </th>
-                  <th onClick={() => handleSort("timelineInDays")}>
+                  <th onClick={() => handleSort("completionDays")}>
                     Timeline{" "}
                     {sortBy === "completionDays" &&
+                      (sortOrder === "asc" ? "▲" : "▼")}
+                  </th>
+                  <th onClick={() => handleSort("progressRetentionPercent")}>
+                    Retention{" "}
+                    {sortBy === "progressRetentionPercent" &&
+                      (sortOrder === "asc" ? "▲" : "▼")}
+                  </th>
+                  <th onClick={() => handleSort("warrantyYears")}>
+                    Warranty{" "}
+                    {sortBy === "warrantyYears" &&
                       (sortOrder === "asc" ? "▲" : "▼")}
                   </th>
                   <th onClick={() => handleSort("dateSubmitted")}>
@@ -278,7 +309,7 @@ function ProjectBids() {
                     {sortBy === "dateSubmitted" &&
                       (sortOrder === "asc" ? "▲" : "▼")}
                   </th>
-                  <th>Details</th>
+                  <th>Status</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -324,6 +355,8 @@ function ProjectBids() {
                           <span className="badge fastest">Fastest</span>
                         )}
                       </td>
+                      <td>{bid.progressRetentionPercent}%</td>
+                      <td>{bid.warrantyYears} year(s)</td>
                       <td>
                         {new Date(bid.dateSubmitted).toLocaleDateString()}
                       </td>
@@ -342,7 +375,6 @@ function ProjectBids() {
                           Award
                         </button>
                       </td>
-                      <td></td>
                     </tr>
                   );
                 })}
@@ -362,24 +394,276 @@ function ProjectBids() {
                 </button>
               </div>
               <div className="modal-body">
-                <div className="proposal-details">
-                  <h3>
-                    {selectedProposal.contractor?.firstName}{" "}
-                    {selectedProposal.contractor?.lastName}
-                  </h3>
-                  <div className="proposal-meta">
-                    <span>
-                      <strong>Bid Amount:</strong> $
-                      {selectedProposal.finalContractPrice?.toLocaleString()}
-                    </span>
-                    <span>
-                      <strong>Timeline:</strong>{" "}
-                      {selectedProposal.completionDays} days
-                    </span>
+                <div
+                  className="tennessee-bid-form-preview container"
+                  style={{
+                    maxWidth: 900,
+                    background: "#fff",
+                    borderRadius: 12,
+                    boxShadow: "0 2px 16px #0001",
+                    padding: 32,
+                  }}
+                >
+                  <h2
+                    style={{
+                      textAlign: "center",
+                      color: "#6c2eb7",
+                      marginBottom: 24,
+                    }}
+                  >
+                    BID FORM FOR CONSTRUCTION OF BUILDING
+                  </h2>
+                  <table
+                    style={{
+                      width: "100%",
+                      borderCollapse: "collapse",
+                      fontSize: 16,
+                      marginBottom: 24,
+                    }}
+                  >
+                    <tbody>
+                      <tr style={{ background: "#f3f3f3" }}>
+                        <th
+                          style={{
+                            textAlign: "left",
+                            padding: 8,
+                            width: "50%",
+                          }}
+                        >
+                          Contractor
+                        </th>
+                        <th
+                          style={{
+                            textAlign: "left",
+                            padding: 8,
+                            width: "50%",
+                          }}
+                        >
+                          Owner
+                        </th>
+                      </tr>
+                      <tr>
+                        <td style={{ padding: 8 }}>
+                          {selectedProposal.contractorName}
+                        </td>
+                        <td style={{ padding: 8 }}>
+                          {selectedProposal.ownerName}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style={{ padding: 8 }}>
+                          {selectedProposal.contractorAddress}
+                        </td>
+                        <td style={{ padding: 8 }}>
+                          {selectedProposal.ownerAddress}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style={{ padding: 8 }}>
+                          {selectedProposal.contractorCity},{" "}
+                          {selectedProposal.contractorState}{" "}
+                          {selectedProposal.contractorZip}
+                        </td>
+                        <td style={{ padding: 8 }}>
+                          {selectedProposal.ownerCity},{" "}
+                          {selectedProposal.ownerState}{" "}
+                          {selectedProposal.ownerZip}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style={{ padding: 8 }}>
+                          License: {selectedProposal.contractorLicense}
+                        </td>
+                        <td style={{ padding: 8 }}></td>
+                      </tr>
+                      <tr style={{ background: "#f3f3f3" }}>
+                        <th style={{ padding: 8 }}>Lender</th>
+                        <td style={{ padding: 8 }}>
+                          {selectedProposal.lenderName}
+                        </td>
+                      </tr>
+                      <tr>
+                        <th style={{ padding: 8 }}>Project Number</th>
+                        <td style={{ padding: 8 }}>
+                          {selectedProposal.projectNumber}
+                        </td>
+                      </tr>
+                      <tr>
+                        <th style={{ padding: 8 }}>Project Address</th>
+                        <td style={{ padding: 8 }}>
+                          {selectedProposal.projectAddress},{" "}
+                          {selectedProposal.projectCity},{" "}
+                          {selectedProposal.projectState}{" "}
+                          {selectedProposal.projectZip}
+                        </td>
+                      </tr>
+                      <tr>
+                        <th style={{ padding: 8 }}>Project Description</th>
+                        <td style={{ padding: 8 }}>
+                          {selectedProposal.projectDescription}
+                        </td>
+                      </tr>
+                      <tr>
+                        <th style={{ padding: 8 }}>Other Contract Documents</th>
+                        <td style={{ padding: 8 }}>
+                          {selectedProposal.otherContractDocs}
+                        </td>
+                      </tr>
+                      <tr>
+                        <th style={{ padding: 8 }}>Work Involved</th>
+                        <td style={{ padding: 8 }}>
+                          {selectedProposal.workInvolved}
+                        </td>
+                      </tr>
+                      <tr style={{ background: "#f3f3f3" }}>
+                        <th style={{ padding: 8 }}>Commencement of Work</th>
+                        <td style={{ padding: 8 }}>
+                          {selectedProposal.commencementType === "notice"
+                            ? `Upon ${selectedProposal.commencementDays} days notice from Owner`
+                            : selectedProposal.commencementType === "acceptance"
+                            ? `Within ${selectedProposal.commencementDays} days of acceptance`
+                            : `Other: ${selectedProposal.commencementOther}`}
+                        </td>
+                      </tr>
+                      <tr>
+                        <th style={{ padding: 8 }}>Completion of Work</th>
+                        <td style={{ padding: 8 }}>
+                          {selectedProposal.completionType === "days"
+                            ? `Within ${selectedProposal.completionDays} days commencement of work`
+                            : `Other: ${selectedProposal.completionOther}`}
+                        </td>
+                      </tr>
+                      <tr style={{ background: "#f3f3f3" }}>
+                        <th style={{ padding: 8 }}>Final Contract Price</th>
+                        <td style={{ padding: 8 }}>
+                          ${selectedProposal.finalContractPrice}
+                        </td>
+                      </tr>
+                      <tr>
+                        <th style={{ padding: 8 }}>Progress Payment</th>
+                        <td style={{ padding: 8 }}>
+                          Less {selectedProposal.progressRetentionPercent}%
+                          retention to be paid within{" "}
+                          {selectedProposal.progressRetentionDays} days of
+                          application of work completed
+                        </td>
+                      </tr>
+                      <tr>
+                        <th style={{ padding: 8 }}>Final Payment</th>
+                        <td style={{ padding: 8 }}>
+                          Including any retention to be paid within{" "}
+                          {selectedProposal.finalPaymentDays} days of Notice of
+                          Completion and Application for Final Payment
+                        </td>
+                      </tr>
+                      <tr style={{ background: "#f3f3f3" }}>
+                        <th style={{ padding: 8 }}>Termination of Proposal</th>
+                        <td style={{ padding: 8 }}>
+                          If not accepted before{" "}
+                          {selectedProposal.terminationDate}
+                        </td>
+                      </tr>
+                      <tr>
+                        <th style={{ padding: 8 }}>Date of Proposal</th>
+                        <td style={{ padding: 8 }}>
+                          {selectedProposal.proposalDate}
+                        </td>
+                      </tr>
+                      <tr>
+                        <th style={{ padding: 8 }}>Warranty Period</th>
+                        <td style={{ padding: 8 }}>
+                          {selectedProposal.warrantyYears} years from completion
+                        </td>
+                      </tr>
+                      <tr>
+                        <th style={{ padding: 8 }}>Additional Provisions</th>
+                        <td style={{ padding: 8 }}>
+                          {selectedProposal.additionalProvisions}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                  <div style={{ marginBottom: 24 }}>
+                    <div
+                      style={{
+                        fontWeight: "bold",
+                        background: "#f3f3f3",
+                        padding: 8,
+                        borderTop: "1px solid #ccc",
+                        borderBottom: "1px solid #ccc",
+                      }}
+                    >
+                      Proposal by Contractor
+                    </div>
+                    <table
+                      style={{
+                        width: "100%",
+                        borderCollapse: "collapse",
+                        marginBottom: 16,
+                      }}
+                    >
+                      <thead>
+                        <tr>
+                          <th style={{ padding: 8, width: "40%" }}>
+                            Signature
+                          </th>
+                          <th style={{ padding: 8, width: "30%" }}>Title</th>
+                          <th style={{ padding: 8, width: "30%" }}>Date</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {(selectedProposal.contractorSignatures || [])
+                          .filter((sig) => sig.name && sig.title && sig.date)
+                          .map((sig, idx) => (
+                            <tr key={idx}>
+                              <td style={{ padding: 8 }}>{sig.name}</td>
+                              <td style={{ padding: 8 }}>{sig.title}</td>
+                              <td style={{ padding: 8 }}>{sig.date}</td>
+                            </tr>
+                          ))}
+                      </tbody>
+                    </table>
                   </div>
-                  <div className="proposal-text">
-                    <h4>Proposal:</h4>
-                    <p>{selectedProposal.proposal}</p>
+                  <div style={{ marginBottom: 24 }}>
+                    <div
+                      style={{
+                        fontWeight: "bold",
+                        background: "#f3f3f3",
+                        padding: 8,
+                        borderTop: "1px solid #ccc",
+                        borderBottom: "1px solid #ccc",
+                      }}
+                    >
+                      Acceptance by Owner
+                    </div>
+                    <table
+                      style={{
+                        width: "100%",
+                        borderCollapse: "collapse",
+                        marginBottom: 16,
+                      }}
+                    >
+                      <thead>
+                        <tr>
+                          <th style={{ padding: 8, width: "40%" }}>
+                            Signature
+                          </th>
+                          <th style={{ padding: 8, width: "30%" }}>Title</th>
+                          <th style={{ padding: 8, width: "30%" }}>Date</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {(selectedProposal.ownerSignatures || [])
+                          .filter((sig) => sig.name && sig.title && sig.date)
+                          .map((sig, idx) => (
+                            <tr key={idx}>
+                              <td style={{ padding: 8 }}>{sig.name}</td>
+                              <td style={{ padding: 8 }}>{sig.title}</td>
+                              <td style={{ padding: 8 }}>{sig.date}</td>
+                            </tr>
+                          ))}
+                      </tbody>
+                    </table>
                   </div>
                 </div>
               </div>
@@ -411,22 +695,43 @@ function ProjectBids() {
             onClick={() => setShowConfirmModal(false)}
           >
             <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-              <div className="modal-header">
-                <h2>Confirm Award</h2>
+              <div
+                className="modal-header"
+                style={{ borderBottom: "1px solid #eee", paddingBottom: 12 }}
+              >
+                <h2 style={{ margin: 0, fontWeight: 600, fontSize: 22 }}>
+                  Owner Acceptance
+                </h2>
                 <button
                   className="modal-close"
                   onClick={() => setShowConfirmModal(false)}
+                  style={{
+                    fontSize: 24,
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    color: "#888",
+                  }}
                 >
                   ×
                 </button>
               </div>
-              <div className="modal-body">
+              <div
+                className="modal-body"
+                style={{ padding: "1.5rem 1rem 1rem 1rem" }}
+              >
                 <div
                   className="award-warning"
-                  style={{ marginBottom: "1.2rem" }}
+                  style={{
+                    marginBottom: "1.2rem",
+                    background: "#f8f8fa",
+                    borderRadius: 6,
+                    padding: "0.75rem 1rem",
+                    fontSize: 15,
+                  }}
                 >
                   <strong>Warning:</strong> Awarding this bid will:
-                  <ul>
+                  <ul style={{ margin: "0.5rem 0 0 1.2rem", padding: 0 }}>
                     <li>
                       Set this bid as <b>Accepted</b> and notify the contractor
                     </li>
@@ -437,26 +742,128 @@ function ProjectBids() {
                     <li>This action cannot be undone</li>
                   </ul>
                 </div>
+                <div
+                  className="award-details"
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "1rem",
+                    marginTop: "1rem",
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "0.5rem",
+                    }}
+                  >
+                    <label style={{ fontWeight: 500, marginBottom: 2 }}>
+                      Owner Signature
+                    </label>
+                    <input
+                      type="text"
+                      value={ownerSignature}
+                      onChange={(e) => setOwnerSignature(e.target.value)}
+                      placeholder="Owner Name"
+                      className="input"
+                      style={{
+                        padding: "0.5rem",
+                        borderRadius: 4,
+                        border: "1px solid #ccc",
+                        fontSize: 15,
+                      }}
+                    />
+                  </div>
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "0.5rem",
+                    }}
+                  >
+                    <label style={{ fontWeight: 500, marginBottom: 2 }}>
+                      Title
+                    </label>
+                    <input
+                      type="text"
+                      value={ownerTitle}
+                      onChange={(e) => setOwnerTitle(e.target.value)}
+                      placeholder="Title"
+                      className="input"
+                      style={{
+                        padding: "0.5rem",
+                        borderRadius: 4,
+                        border: "1px solid #ccc",
+                        fontSize: 15,
+                      }}
+                    />
+                  </div>
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "0.5rem",
+                    }}
+                  >
+                    <label style={{ fontWeight: 500, marginBottom: 2 }}>
+                      Date
+                    </label>
+                    <input
+                      type="date"
+                      value={ownerDate}
+                      onChange={(e) => setOwnerDate(e.target.value)}
+                      className="input"
+                      style={{
+                        padding: "0.5rem",
+                        borderRadius: 4,
+                        border: "1px solid #ccc",
+                        fontSize: 15,
+                      }}
+                    />
+                  </div>
+                </div>
               </div>
-              <div className="modal-footer">
+              <div
+                className="modal-footer"
+                style={{
+                  display: "flex",
+                  justifyContent: "flex-end",
+                  gap: 12,
+                  borderTop: "1px solid #eee",
+                  paddingTop: 16,
+                }}
+              >
                 <button
                   className="btn btn-secondary"
                   onClick={() => {
                     setShowConfirmModal(false);
                     setAwardingBid(null);
                   }}
+                  style={{ minWidth: 100 }}
                 >
                   Cancel
                 </button>
                 <button
                   className="btn btn-success"
                   onClick={async () => {
-                    await confirmAward();
+                    await confirmAward({
+                      ownerSignatures: [
+                        {
+                          name: ownerSignature,
+                          title: ownerTitle,
+                          date: ownerDate,
+                        },
+                      ],
+                    });
                     setShowConfirmModal(false);
                   }}
-                  disabled={awarding}
+                  disabled={
+                    awarding || !ownerSignature || !ownerTitle || !ownerDate
+                  }
+                  style={{ minWidth: 140 }}
                 >
-                  {awarding ? "Awarding..." : "Confirm"}
+                  {awarding ? "Awarding..." : "Confirm & Sign"}
                 </button>
               </div>
             </div>

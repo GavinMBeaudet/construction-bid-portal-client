@@ -287,15 +287,15 @@ function EditBid() {
                 />
               </div>
               <div className="form-group">
-                <label htmlFor="proposal">Proposal</label>
+                <label htmlFor="workInvolved">Work Involved</label>
                 <textarea
-                  id="proposal"
-                  name="proposal"
-                  value={formData.proposal}
+                  id="workInvolved"
+                  name="workInvolved"
+                  value={formData.workInvolved}
                   onChange={handleChange}
                   required
                   rows="6"
-                  placeholder="Describe your approach, timeline, and qualifications..."
+                  placeholder="Describe the scope of work, materials, and methods you propose for this bid."
                 />
               </div>
               <div className="form-group">
@@ -365,7 +365,7 @@ function EditBid() {
                   id="ownerName"
                   name="ownerName"
                   value={formData.ownerName}
-                  onChange={handleChange}
+                  readOnly={user?.userType === "Contractor"}
                 />
               </div>
               <div className="form-group">
@@ -375,7 +375,7 @@ function EditBid() {
                   id="ownerAddress"
                   name="ownerAddress"
                   value={formData.ownerAddress}
-                  onChange={handleChange}
+                  readOnly={user?.userType === "Contractor"}
                 />
               </div>
               <div className="form-group">
@@ -385,7 +385,7 @@ function EditBid() {
                   id="ownerCity"
                   name="ownerCity"
                   value={formData.ownerCity}
-                  onChange={handleChange}
+                  readOnly={user?.userType === "Contractor"}
                 />
               </div>
               <div className="form-group">
@@ -395,7 +395,7 @@ function EditBid() {
                   id="ownerState"
                   name="ownerState"
                   value={formData.ownerState}
-                  onChange={handleChange}
+                  readOnly={user?.userType === "Contractor"}
                 />
               </div>
               <div className="form-group">
@@ -405,7 +405,7 @@ function EditBid() {
                   id="ownerZip"
                   name="ownerZip"
                   value={formData.ownerZip}
-                  onChange={handleChange}
+                  readOnly={user?.userType === "Contractor"}
                 />
               </div>
               <div className="form-group">
@@ -465,7 +465,7 @@ function EditBid() {
                   id="projectNumber"
                   name="projectNumber"
                   value={formData.projectNumber}
-                  onChange={handleChange}
+                  readOnly={user?.userType === "Contractor"}
                 />
               </div>
               <div className="form-group">
@@ -475,7 +475,7 @@ function EditBid() {
                   id="projectAddress"
                   name="projectAddress"
                   value={formData.projectAddress}
-                  onChange={handleChange}
+                  readOnly={user?.userType === "Contractor"}
                 />
               </div>
               <div className="form-group">
@@ -485,7 +485,7 @@ function EditBid() {
                   id="projectCity"
                   name="projectCity"
                   value={formData.projectCity}
-                  onChange={handleChange}
+                  readOnly={user?.userType === "Contractor"}
                 />
               </div>
               <div className="form-group">
@@ -495,7 +495,7 @@ function EditBid() {
                   id="projectState"
                   name="projectState"
                   value={formData.projectState}
-                  onChange={handleChange}
+                  readOnly={user?.userType === "Contractor"}
                 />
               </div>
               <div className="form-group">
@@ -505,7 +505,7 @@ function EditBid() {
                   id="projectZip"
                   name="projectZip"
                   value={formData.projectZip}
-                  onChange={handleChange}
+                  readOnly={user?.userType === "Contractor"}
                 />
               </div>
               <div className="form-group">
@@ -515,7 +515,7 @@ function EditBid() {
                   id="projectDescription"
                   name="projectDescription"
                   value={formData.projectDescription}
-                  onChange={handleChange}
+                  readOnly={user?.userType === "Contractor"}
                 />
               </div>
               <div className="form-group">

@@ -14,6 +14,12 @@ function Register() {
     firstName: "",
     lastName: "",
     userType: initialUserType,
+    address: "",
+    city: "",
+    state: "",
+    zip: "",
+    licenseNumber: "",
+    title: "",
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -52,6 +58,12 @@ function Register() {
         firstName: formData.firstName,
         lastName: formData.lastName,
         userType: formData.userType,
+        address: formData.address,
+        city: formData.city,
+        state: formData.state,
+        zip: formData.zip,
+        licenseNumber: formData.licenseNumber,
+        title: formData.title,
       });
       navigate("/dashboard");
     } catch (err) {
@@ -125,6 +137,81 @@ function Register() {
                 placeholder="john.doe@example.com"
               />
             </div>
+
+            <div className="form-row">
+              <div className="form-group">
+                <label htmlFor="address">Address</label>
+                <input
+                  type="text"
+                  id="address"
+                  name="address"
+                  value={formData.address}
+                  onChange={handleChange}
+                  placeholder="123 Main St"
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="city">City</label>
+                <input
+                  type="text"
+                  id="city"
+                  name="city"
+                  value={formData.city}
+                  onChange={handleChange}
+                  placeholder="City"
+                />
+              </div>
+            </div>
+            <div className="form-row">
+              <div className="form-group">
+                <label htmlFor="state">State</label>
+                <input
+                  type="text"
+                  id="state"
+                  name="state"
+                  value={formData.state}
+                  onChange={handleChange}
+                  placeholder="State"
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="zip">Zip</label>
+                <input
+                  type="text"
+                  id="zip"
+                  name="zip"
+                  value={formData.zip}
+                  onChange={handleChange}
+                  placeholder="Zip"
+                />
+              </div>
+            </div>
+            {formData.userType === "Contractor" && (
+              <div className="form-group">
+                <label htmlFor="licenseNumber">License Number</label>
+                <input
+                  type="text"
+                  id="licenseNumber"
+                  name="licenseNumber"
+                  value={formData.licenseNumber}
+                  onChange={handleChange}
+                  placeholder="Contractor License Number"
+                />
+              </div>
+            )}
+            {formData.userType === "Owner" && (
+              <div className="form-group">
+                <label htmlFor="title">Title</label>
+                <input
+                  type="text"
+                  id="title"
+                  name="title"
+                  value={formData.title}
+                  onChange={handleChange}
+                  placeholder="Owner Title"
+                />
+              </div>
+            )}
 
             <div className="form-group">
               <label htmlFor="password">Password</label>

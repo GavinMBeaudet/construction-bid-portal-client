@@ -104,12 +104,13 @@ export const deleteBid = async (id, userId) => {
   if (!response.ok) throw new Error("Failed to delete bid");
 };
 
-export const awardBid = async (bidId, userId) => {
+export const awardBid = async (bidId, userId, acceptanceInfo = {}) => {
   const response = await fetch(
     `${API_URL}/bids/${bidId}/award?userId=${userId}`,
     {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(acceptanceInfo),
     }
   );
   if (!response.ok) {

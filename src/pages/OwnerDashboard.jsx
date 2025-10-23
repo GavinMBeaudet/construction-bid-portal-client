@@ -162,12 +162,20 @@ function OwnerDashboard() {
               <dd>{user?.email}</dd>
               <dt>User Type:</dt>
               <dd>{user?.userType}</dd>
-              <dt>Member Since:</dt>
-              <dd>
-                {user?.dateCreated
-                  ? new Date(user.dateCreated).toLocaleDateString()
-                  : "N/A"}
-              </dd>
+              <dt>Address:</dt>
+              <dd>{user?.address || "N/A"}</dd>
+              <dt>City:</dt>
+              <dd>{user?.city || "N/A"}</dd>
+              <dt>State:</dt>
+              <dd>{user?.state || "N/A"}</dd>
+              <dt>Zip:</dt>
+              <dd>{user?.zip || "N/A"}</dd>
+              {user?.licenseNumber && (
+                <>
+                  <dt>License Number:</dt>
+                  <dd>{user.licenseNumber}</dd>
+                </>
+              )}
             </dl>
           </div>
         </div>

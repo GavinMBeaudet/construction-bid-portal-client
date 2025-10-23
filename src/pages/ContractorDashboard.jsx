@@ -74,29 +74,82 @@ function ContractorDashboard() {
 
       <main className="container">
         <div className="dashboard-header">
-          <h1>
-            Welcome, {user?.firstName} {user?.lastName}!
-          </h1>
-          <p className="subtitle">Contractor Dashboard</p>
+          <h1>Contractor Dashboard</h1>
         </div>
-
-        {error && <div className="alert alert-error">{error}</div>}
-
-        {/* Statistics Summary */}
-        <div className="dashboard-stats">
-          <div className="stat-card">
-            <h3>{bids.length}</h3>
-            <p>Total Bids</p>
+        {/* Dashboard summary cards */}
+        {!loading && bids.length > 0 && (
+          <div
+            className="dashboard-cards"
+            style={{
+              display: "flex",
+              gap: 32,
+              marginBottom: 32,
+              justifyContent: "center",
+              width: "100%",
+            }}
+          >
+            <div
+              className="dashboard-card"
+              style={{
+                background: "#f8f8fa",
+                borderRadius: 12,
+                padding: "1.5rem 0",
+                flex: 1,
+                minWidth: 0,
+                boxShadow: "0 2px 8px #0001",
+                textAlign: "center",
+                maxWidth: 340,
+              }}
+            >
+              <div style={{ fontSize: 20, fontWeight: 600, marginBottom: 8 }}>
+                Total Bids
+              </div>
+              <div style={{ fontSize: 40, fontWeight: 700, color: "#6c2eb7" }}>
+                {bids.length}
+              </div>
+            </div>
+            <div
+              className="dashboard-card"
+              style={{
+                background: "#f8f8fa",
+                borderRadius: 12,
+                padding: "1.5rem 0",
+                flex: 1,
+                minWidth: 0,
+                boxShadow: "0 2px 8px #0001",
+                textAlign: "center",
+                maxWidth: 340,
+              }}
+            >
+              <div style={{ fontSize: 20, fontWeight: 600, marginBottom: 8 }}>
+                Total Pending
+              </div>
+              <div style={{ fontSize: 40, fontWeight: 700, color: "#f5a623" }}>
+                {pendingBids}
+              </div>
+            </div>
+            <div
+              className="dashboard-card"
+              style={{
+                background: "#f8f8fa",
+                borderRadius: 12,
+                padding: "1.5rem 0",
+                flex: 1,
+                minWidth: 0,
+                boxShadow: "0 2px 8px #0001",
+                textAlign: "center",
+                maxWidth: 340,
+              }}
+            >
+              <div style={{ fontSize: 20, fontWeight: 600, marginBottom: 8 }}>
+                Total Accepted
+              </div>
+              <div style={{ fontSize: 40, fontWeight: 700, color: "#27ae60" }}>
+                {acceptedBids}
+              </div>
+            </div>
           </div>
-          <div className="stat-card">
-            <h3>{pendingBids}</h3>
-            <p>Pending Bids</p>
-          </div>
-          <div className="stat-card">
-            <h3>{acceptedBids}</h3>
-            <p>Accepted Bids</p>
-          </div>
-        </div>
+        )}
 
         {loading ? (
           <div className="loading">Loading your bids...</div>
@@ -135,6 +188,20 @@ function ContractorDashboard() {
                       </div>
                       <div className="detail-item">
                         <strong>Timeline:</strong> {bid.completionDays} days
+                      </div>
+                      <div className="detail-item">
+                        <strong>Contractor:</strong> {bid.contractorName} (
+                        {bid.contractorLicense})
+                      </div>
+                      <div className="detail-item">
+                        <strong>Owner:</strong> {bid.ownerName}
+                      </div>
+                      <div className="detail-item">
+                        <strong>Retention:</strong>{" "}
+                        {bid.progressRetentionPercent}%
+                      </div>
+                      <div className="detail-item">
+                        <strong>Warranty:</strong> {bid.warrantyYears} year(s)
                       </div>
                       <div className="detail-item">
                         <strong>Submitted:</strong>{" "}
@@ -183,12 +250,20 @@ function ContractorDashboard() {
               <dd>{user?.email}</dd>
               <dt>User Type:</dt>
               <dd>{user?.userType}</dd>
-              <dt>Member Since:</dt>
-              <dd>
-                {user?.dateCreated
-                  ? new Date(user.dateCreated).toLocaleDateString()
-                  : "N/A"}
-              </dd>
+              <dt>Address:</dt>
+              <dd>{user?.address || "N/A"}</dd>
+              <dt>City:</dt>
+              <dd>{user?.city || "N/A"}</dd>
+              <dt>State:</dt>
+              <dd>{user?.state || "N/A"}</dd>
+              <dt>Zip:</dt>
+              <dd>{user?.zip || "N/A"}</dd>
+              {user?.licenseNumber && (
+                <>
+                  <dt>License Number:</dt>
+                  <dd>{user.licenseNumber}</dd>
+                </>
+              )}
             </dl>
           </div>
         </div>

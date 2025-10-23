@@ -125,6 +125,19 @@ function Bids() {
                     <strong>Submitted:</strong>{" "}
                     {new Date(bid.dateSubmitted).toLocaleDateString()}
                   </div>
+                  <div className="detail-item">
+                    <strong>Contractor:</strong> {bid.contractorName} (
+                    {bid.contractorLicense})
+                  </div>
+                  <div className="detail-item">
+                    <strong>Owner:</strong> {bid.ownerName}
+                  </div>
+                  <div className="detail-item">
+                    <strong>Retention:</strong> {bid.progressRetentionPercent}%
+                  </div>
+                  <div className="detail-item">
+                    <strong>Warranty:</strong> {bid.warrantyYears} year(s)
+                  </div>
                 </div>
 
                 <div className="bid-proposal">
